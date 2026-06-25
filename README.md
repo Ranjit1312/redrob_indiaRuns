@@ -1,54 +1,77 @@
-# v3 — Validated potential: proctored skill assessments, evidence-gated
+# v4 — Teacher-student distillation + full-profile-audit rules (final)
 
-v2 plus the Redrob skill-assessment signal — proctored test scores as
-corroboration a keyword-stuffer cannot fake, gated so a test can never
-substitute for career proof.
+v3 plus a GPU cross-encoder teacher distilled into a tuned LightGBM LambdaMART
+student blended at alpha=0.2, and the base-rate-verified rules from the
+full-profile audit. This is the submitted configuration (`rank.py`).
 
-## The rules this version applies (on top of v2's evidence layer)
+## The rules this version applies (on top of v3)
 
-1. **JD-relevant assessment strength** — `skill_assessment_scores` keys matched
-   against a JD-relevance regex (embeddings/vector/retrieval/ranking/NLP/LLM/
-   Python/PyTorch/...; CV/speech excluded); mean of top-3 scores mapped via
-   `(score - 40) / 50` clipped to [0,1] (a 50 is not validation; a 90 is),
-   then **confidence-discounted by test count**: `strength *= n / (n + 0.5)`
-   (1 test = 0.67x, 3 tests = 0.86x).
-2. **Corroboration becomes a 3-way max** —
-   `fit *= 0.4 + 0.6 * max(narrative corroboration, evidence coverage, assess_corr)`
-   where `assess_corr = assess_strength * min(1, evid_coverage / 0.25)`:
-   assessment credit scales with narrative evidence and reaches full credit only
-   at coverage >= 0.25 — the evidence gate.
-3. **+0.05 additive "validated potential" term** —
-   `fit = 0.38*dense + 0.09*lex + 0.40*coverage + 0.08*depth + 0.05*assess_strength`;
-   upside-only, absence of assessments costs nothing.
-4. Everything else identical to v2 (evidence regexes, integrity ladder, hopper
-   x0.55, CV-primary x0.60, location model, notice penalty).
+1. **Cross-encoder teacher: bge-reranker-v2-m3** — chosen with **8K context
+   after measuring 27.3% truncation at 512 tokens** with the default
+   bge-reranker-base (evidence p99 ~641 tokens, max 861 — truncation cut exactly
+   the early-career pre-LLM ML the JD asks about). Positive-evidence-only JD
+   query (a relevance CE can't follow "NOT a researcher"). Bias-validated on
+   corpus templates and probes before trusting: the plain-language Tier-5
+   (0.691) outranked the keyword-claimer (0.671).
+2. **Gated pseudo-labels** — `pseudo_label = sigmoid(CE logit) x anti-stuffer
+   corroboration gate x integrity`, so residual CE bias cannot propagate into
+   the student. 8K shortlist + 4K random negatives.
+3. **Tuned LightGBM LambdaMART student** — lambdarank over 16 qcut label bins
+   (`label_gain = 2^i - 1`), ~500-doc pseudo-groups, **stratified** 20% holdout
+   and 4-fold CV, **coordinate descent** from the proven incumbent (21 configs;
+   winning moves were more regularization: lr 0.08, min-leaf 80,
+   feature-fraction 0.6). Holdout NDCG@10 0.6613 vs 0.6151 untuned.
+4. **Blend at alpha=0.2** — `final = minmax(0.2*LGBM + 0.8*rules-fit) x integrity
+   x availability x notice`; the alpha-sweep peaked at 0.2 (0.9277 vs 0.8992
+   rules-only, +2.9 pts) and 0.2 is the conservative pick.
+5. **Full-profile-audit rules** (each base-rate-verified before encoding):
+   - dormant (inactive > 6 months AND recruiter response < 0.2): availability
+     **x0.5** — the JD's own worked exclusion example (3.7% of pool);
+   - low-response-alone (< 0.2, not dormant): **x0.8**;
+   - certification anachronism (LangChain dated < 2022 / LLaMA < 2023):
+     integrity **x0.30** (45 in pool — rare authenticity fingerprint);
+   - activity-before-signup: integrity **x0.97** soft (7.5% of pool = generator noise);
+   - concurrent same-window degrees: integrity **x0.93** soft (0.73%);
+   - remote-pref location caps: remote+no-reloc+non-target-city capped at 0.25,
+     any remote-pref x0.9 (JD is hybrid Tue/Thu); India non-target no-reloc 0.40 -> 0.33;
+   - notice tiers **1.0 / 0.93 / 0.90 / 0.85** (<=90d / <120d / =120d / >120d);
+   - **evidence-coverage tie-break** before candidate_id in the top-100 sort.
 
-## Why (from the audits — see ../audit_report.md, Round 3)
+## Why (from the audits — see ../audit_report.md, Rounds 4-5)
 
-- The pool contains **skilled-but-not-yet-applied candidates** ("validated
-  potential") whose career text undersells them; a proctored assessment is the
-  one corroboration channel a stuffer cannot fake.
-- But the first attempt let **ungated assessments lift coverage-0.15 profiles
-  ~200 ranks** on a single test score — the diff-audit against v2 showed
-  single-test jumpers entering the top-50. The fix: the `min(1, coverage/0.25)`
-  evidence gate plus the `n/(n+0.5)` confidence discount.
-- After gating, top-50 churn dropped from 8 to 3 entrants, all legitimate
-  tie-breaks.
+- The **full-profile audit (complete JD + every field) returned verdict MAJOR**:
+  the JD's literal dormant-and-unresponsive exclusion example sat at rank 17;
+  LangChain-2018 cert anachronisms, education impossibilities, and
+  signup-vs-activity contradictions were invisible to the field-subset audits.
+- **Base-rate verification demoted 3 of the auditor's 5 proposed removals to
+  soft penalties**: activity-before-signup hits 7,496 candidates,
+  career-before-education 19,499, concurrent degrees 728 — pervasive synthetic
+  noise, none can be among ~80 honeypots. The rare fingerprints (45 anachronisms,
+  3.7% dormant) became strong rules.
+- The final top-50 verification was MINOR only: the reasoning label
+  "ranking-evaluation rigor (NDCG/MRR/A-B)" was softened to
+  "ranking-evaluation work" for 2 candidates whose profiles don't name those
+  metrics, and the coverage tie-break was added. Final state: zero
+  disqualifiers, zero hallucinations, zero impossible/dormant profiles in the
+  top-100.
 
 ## How to run
 
-One-time precompute (unconstrained, may use GPU):
+One-time precompute (unconstrained; teacher needs a GPU, ~8.4 min on RTX 4050):
 
 ```
 python run_step35.py --candidates ..\..\candidates.jsonl --out-dir ..\..\artifacts_full
+python precompute_teacher.py
+python train_student.py
 ```
 
-Note: the diff-audit section at the end of the rank step compares against v2's
-saved scores (`artifacts_full\scores_step35_v3.parquet`), so run v2's
-`rank.py` once first if that file does not exist yet.
+(`rank.py` from versions\v3 must have produced
+`features_refined_v3.parquet` / `scores_step35_v4.parquet`, and this
+version's `rescore.py` produces `features_v4.parquet`, before the first
+`rank.py` run here.)
 
-Constrained rank step (CPU only — writes `submission.csv` and
-`top100candidates.jsonl` in THIS directory):
+Constrained rank step (CPU only, ~2 s — writes `submission.csv` and
+`rank_telemetry.json` in THIS directory):
 
 ```
 python rank.py
@@ -65,6 +88,7 @@ If the repo root is elsewhere, set `RANKER_ROOT` to the directory containing
 
 ## Telemetry
 
-Wall / CPU / peak-RAM figures are printed at the end of every run and recorded
-in `telemetry.json` / `RESULTS.md` after the run, together with the v2 -> v3
-diff-audit (top-50 enter/exit list) and the 14 tracked probe ranks.
+Per-stage wall / CPU / RSS / peak-RAM and artifact disk footprint are printed
+on every run and recorded in `rank_telemetry.json` (results summarized in
+`telemetry.json` / `RESULTS.md` after the run): reference run = 2.0 s wall
+(0.7% of budget), 0.40 GB peak RAM (2.5%), 16.5 MB artifacts (0.3% of 5 GB).

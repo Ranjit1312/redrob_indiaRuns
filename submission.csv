@@ -1,101 +1,101 @@
 candidate_id,rank,score,reasoning
-CAND_0046525,1,0.665188,"Senior Machine Learning Engineer with 6 yrs; career history shows embeddings/semantic-search work, ranking-evaluation rigor (NDCG/MRR/A-B); platform-validated assessments in relevant skills."
-CAND_0009691,2,0.581477,"Applied ML Engineer with 6 yrs; career history shows embeddings/semantic-search work, ranking-evaluation rigor (NDCG/MRR/A-B), shipped ranking/recommendation systems; concern: 120-day notice period."
-CAND_0054123,3,0.572691,"Applied ML Engineer with 5 yrs; career history shows embeddings/semantic-search work, ranking-evaluation rigor (NDCG/MRR/A-B), shipped ranking/recommendation systems; platform-validated assessments in relevant skills."
-CAND_0087630,4,0.565462,"AI Engineer with 7 yrs; career history shows embeddings/semantic-search work, ranking-evaluation rigor (NDCG/MRR/A-B), shipped ranking/recommendation systems; platform-validated assessments in relevant skills."
-CAND_0071974,5,0.558753,"Senior AI Engineer with 8 yrs; career history shows embeddings/semantic-search work, vector-database/hybrid-search experience, ranking-evaluation rigor (NDCG/MRR/A-B); platform-validated assessments in relevant skills; concern: location/relocation friction."
-CAND_0011687,6,0.549879,"Senior NLP Engineer with 8 yrs; career history shows embeddings/semantic-search work, vector-database/hybrid-search experience, ranking-evaluation rigor (NDCG/MRR/A-B); concern: location/relocation friction."
-CAND_0047721,7,0.549269,"Senior Data Scientist with 7 yrs; career history shows embeddings/semantic-search work, ranking-evaluation rigor (NDCG/MRR/A-B), shipped ranking/recommendation systems; platform-validated assessments in relevant skills."
-CAND_0061257,8,0.52869,Staff Machine Learning Engineer with 8 yrs; career history shows shipped ranking/recommendation systems.
-CAND_0099401,9,0.52461,"NLP Engineer with 8 yrs; career history shows embeddings/semantic-search work, ranking-evaluation rigor (NDCG/MRR/A-B), shipped ranking/recommendation systems."
-CAND_0061339,10,0.524439,"Search Engineer with 4 yrs; career history shows embeddings/semantic-search work, ranking-evaluation rigor (NDCG/MRR/A-B), shipped ranking/recommendation systems."
-CAND_0041669,11,0.520409,"Recommendation Systems Engineer with 8 yrs; career history shows ranking-evaluation rigor (NDCG/MRR/A-B), shipped ranking/recommendation systems; platform-validated assessments in relevant skills."
-CAND_0096142,12,0.519066,"Applied ML Engineer with 5 yrs; career history shows ranking-evaluation rigor (NDCG/MRR/A-B), shipped ranking/recommendation systems; platform-validated assessments in relevant skills; concern: 120-day notice period."
-CAND_0007411,13,0.488881,"Senior Machine Learning Engineer with 8 yrs; career history shows embeddings/semantic-search work, vector-database/hybrid-search experience, ranking-evaluation rigor (NDCG/MRR/A-B); platform-validated assessments in relevant skills; concern: low recruiter response rate."
-CAND_0006418,14,0.47737,"Machine Learning Engineer with 6 yrs; career history shows ranking-evaluation rigor (NDCG/MRR/A-B), shipped ranking/recommendation systems; platform-validated assessments in relevant skills."
-CAND_0009024,15,0.47248,"Search Engineer with 5 yrs; career history shows embeddings/semantic-search work, ranking-evaluation rigor (NDCG/MRR/A-B), shipped ranking/recommendation systems; platform-validated assessments in relevant skills; concern: location/relocation friction."
-CAND_0064326,16,0.445616,"Search Engineer with 8 yrs; career history shows ranking-evaluation rigor (NDCG/MRR/A-B), shipped ranking/recommendation systems; platform-validated assessments in relevant skills."
-CAND_0030031,17,0.440545,"AI Engineer with 6 yrs; career history shows embeddings/semantic-search work, ranking-evaluation rigor (NDCG/MRR/A-B), shipped ranking/recommendation systems; platform-validated assessments in relevant skills; concern: location/relocation friction."
-CAND_0039383,18,0.43676,"Applied ML Engineer with 7 yrs; career history shows ranking-evaluation rigor (NDCG/MRR/A-B), shipped ranking/recommendation systems; platform-validated assessments in relevant skills."
-CAND_0049896,19,0.436253,"Search Engineer with 7 yrs; career history shows vector-database/hybrid-search experience, shipped ranking/recommendation systems."
-CAND_0086151,20,0.431606,"Recommendation Systems Engineer with 8 yrs; career history shows ranking-evaluation rigor (NDCG/MRR/A-B), shipped ranking/recommendation systems, embeddings/semantic-search work; platform-validated assessments in relevant skills; concern: 120-day notice period."
-CAND_0015528,21,0.431392,"Applied ML Engineer with 7 yrs; career history shows embeddings/semantic-search work, ranking-evaluation rigor (NDCG/MRR/A-B), shipped ranking/recommendation systems; concern: location/relocation friction."
-CAND_0052328,22,0.418668,"Recommendation Systems Engineer with 6 yrs; career history shows vector-database/hybrid-search experience, shipped ranking/recommendation systems; platform-validated assessments in relevant skills."
-CAND_0094759,23,0.415751,"Lead AI Engineer with 9 yrs; career history shows embeddings/semantic-search work, ranking-evaluation rigor (NDCG/MRR/A-B), vector-database/hybrid-search experience; platform-validated assessments in relevant skills; concern: no recent hands-on coding role, low recruiter response rate."
-CAND_0062247,24,0.414953,AI Engineer with 7 yrs; career history shows adjacent applied-ML work.
-CAND_0060054,25,0.413094,"AI Engineer with 6 yrs; career history shows embeddings/semantic-search work, ranking-evaluation rigor (NDCG/MRR/A-B), shipped ranking/recommendation systems."
-CAND_0036863,26,0.409293,"Senior Data Scientist with 4 yrs; career history shows ranking-evaluation rigor (NDCG/MRR/A-B), shipped ranking/recommendation systems; platform-validated assessments in relevant skills."
-CAND_0026532,27,0.404316,"Recommendation Systems Engineer with 5 yrs; career history shows embeddings/semantic-search work, ranking-evaluation rigor (NDCG/MRR/A-B), shipped ranking/recommendation systems."
-CAND_0031593,28,0.400072,"Search Engineer with 8 yrs; career history shows ranking-evaluation rigor (NDCG/MRR/A-B), shipped ranking/recommendation systems."
-CAND_0060072,29,0.393627,"Staff Machine Learning Engineer with 6 yrs; career history shows embeddings/semantic-search work, ranking-evaluation rigor (NDCG/MRR/A-B), shipped ranking/recommendation systems; concern: low recruiter response rate."
-CAND_0066999,30,0.393577,"Recommendation Systems Engineer with 6 yrs; career history shows ranking-evaluation rigor (NDCG/MRR/A-B), shipped ranking/recommendation systems; platform-validated assessments in relevant skills."
-CAND_0079284,31,0.388166,"Machine Learning Engineer with 5 yrs; career history shows ranking-evaluation rigor (NDCG/MRR/A-B), shipped ranking/recommendation systems, embeddings/semantic-search work."
-CAND_0005260,32,0.386092,"Senior NLP Engineer with 5 yrs; career history shows embeddings/semantic-search work, vector-database/hybrid-search experience, ranking-evaluation rigor (NDCG/MRR/A-B)."
-CAND_0093912,33,0.373576,"Senior Data Scientist with 5 yrs; career history shows ranking-evaluation rigor (NDCG/MRR/A-B), shipped ranking/recommendation systems; concern: location/relocation friction."
-CAND_0012957,34,0.372282,"Search Engineer with 5 yrs; career history shows ranking-evaluation rigor (NDCG/MRR/A-B), shipped ranking/recommendation systems, embeddings/semantic-search work; concern: 120-day notice period."
-CAND_0030348,35,0.364618,"Machine Learning Engineer with 4 yrs; career history shows embeddings/semantic-search work, ranking-evaluation rigor (NDCG/MRR/A-B), shipped ranking/recommendation systems."
-CAND_0050876,36,0.363537,"Applied ML Engineer with 6 yrs; career history shows ranking-evaluation rigor (NDCG/MRR/A-B), shipped ranking/recommendation systems, embeddings/semantic-search work; concern: location/relocation friction."
-CAND_0010257,37,0.363123,Senior Data Scientist with 6 yrs; career history shows adjacent applied-ML work; platform-validated assessments in relevant skills; concern: 120-day notice period.
-CAND_0078002,38,0.358063,"Machine Learning Engineer with 6 yrs; career history shows ranking-evaluation rigor (NDCG/MRR/A-B), shipped ranking/recommendation systems, embeddings/semantic-search work; platform-validated assessments in relevant skills; concern: location/relocation friction."
-CAND_0083879,39,0.356048,"Machine Learning Engineer with 7 yrs; career history shows ranking-evaluation rigor (NDCG/MRR/A-B), shipped ranking/recommendation systems."
-CAND_0024466,40,0.35359,"Search Engineer with 5 yrs; career history shows ranking-evaluation rigor (NDCG/MRR/A-B), shipped ranking/recommendation systems; platform-validated assessments in relevant skills; concern: 120-day notice period."
-CAND_0075439,41,0.352517,"Machine Learning Engineer with 4 yrs; career history shows vector-database/hybrid-search experience, embeddings/semantic-search work, ranking-evaluation rigor (NDCG/MRR/A-B); concern: location/relocation friction."
-CAND_0042029,42,0.352422,"Senior Data Scientist with 6 yrs; career history shows ranking-evaluation rigor (NDCG/MRR/A-B), shipped ranking/recommendation systems."
-CAND_0041610,43,0.35005,"Recommendation Systems Engineer with 7 yrs; career history shows ranking-evaluation rigor (NDCG/MRR/A-B), shipped ranking/recommendation systems."
-CAND_0098846,44,0.349476,"AI Engineer with 8 yrs; career history shows ranking-evaluation rigor (NDCG/MRR/A-B), shipped ranking/recommendation systems."
-CAND_0028793,45,0.349268,Search Engineer with 7 yrs; career history shows vector-database/hybrid-search experience; platform-validated assessments in relevant skills; concern: 120-day notice period.
-CAND_0054394,46,0.349018,"Recommendation Systems Engineer with 4 yrs; career history shows ranking-evaluation rigor (NDCG/MRR/A-B), shipped ranking/recommendation systems."
-CAND_0065878,47,0.341737,"Senior Data Scientist with 8 yrs; career history shows ranking-evaluation rigor (NDCG/MRR/A-B), shipped ranking/recommendation systems, embeddings/semantic-search work; concern: location/relocation friction."
-CAND_0076163,48,0.336533,"NLP Engineer with 7 yrs; career history shows ranking-evaluation rigor (NDCG/MRR/A-B), shipped ranking/recommendation systems; platform-validated assessments in relevant skills; concern: location/relocation friction."
-CAND_0074225,49,0.334002,"Machine Learning Engineer with 4 yrs; career history shows ranking-evaluation rigor (NDCG/MRR/A-B), shipped ranking/recommendation systems, vector-database/hybrid-search experience; platform-validated assessments in relevant skills; concern: 120-day notice period."
-CAND_0010685,50,0.331417,"NLP Engineer with 7 yrs; career history shows ranking-evaluation rigor (NDCG/MRR/A-B), shipped ranking/recommendation systems; concern: location/relocation friction."
-CAND_0017960,51,0.327808,"Recommendation Systems Engineer with 8 yrs; career history shows ranking-evaluation rigor (NDCG/MRR/A-B), shipped ranking/recommendation systems."
-CAND_0064904,52,0.325971,"AI Engineer with 5 yrs; career history shows embeddings/semantic-search work, ranking-evaluation rigor (NDCG/MRR/A-B), shipped ranking/recommendation systems."
-CAND_0069905,53,0.319372,Applied ML Engineer with 7 yrs; career history shows vector-database/hybrid-search experience.
-CAND_0058575,54,0.31636,"AI Engineer with 6 yrs; career history shows vector-database/hybrid-search experience, shipped ranking/recommendation systems."
-CAND_0027691,55,0.31432,NLP Engineer with 6 yrs; career history shows adjacent applied-ML work; platform-validated assessments in relevant skills.
-CAND_0070485,56,0.313506,"Search Engineer with 6 yrs; career history shows ranking-evaluation rigor (NDCG/MRR/A-B), shipped ranking/recommendation systems; concern: 120-day notice period, location/relocation friction."
-CAND_0046064,57,0.31156,"Senior NLP Engineer with 9 yrs; career history shows embeddings/semantic-search work, vector-database/hybrid-search experience, ranking-evaluation rigor (NDCG/MRR/A-B); concern: location/relocation friction."
-CAND_0076251,58,0.310869,Search Engineer with 8 yrs; career history shows adjacent applied-ML work; platform-validated assessments in relevant skills.
-CAND_0011162,59,0.310211,"Recommendation Systems Engineer with 6 yrs; career history shows ranking-evaluation rigor (NDCG/MRR/A-B), shipped ranking/recommendation systems."
-CAND_0036437,60,0.307646,"Search Engineer with 5 yrs; career history shows ranking-evaluation rigor (NDCG/MRR/A-B), shipped ranking/recommendation systems."
-CAND_0051292,61,0.305742,"Applied ML Engineer with 5 yrs; career history shows ranking-evaluation rigor (NDCG/MRR/A-B), shipped ranking/recommendation systems; concern: location/relocation friction."
-CAND_0052335,62,0.304517,"Applied ML Engineer with 6 yrs; career history shows ranking-evaluation rigor (NDCG/MRR/A-B), shipped ranking/recommendation systems."
-CAND_0069638,63,0.303325,Computer Vision Engineer with 6 yrs; career history shows shipped ranking/recommendation systems.
-CAND_0011432,64,0.297976,"Senior Data Scientist with 8 yrs; career history shows ranking-evaluation rigor (NDCG/MRR/A-B), shipped ranking/recommendation systems, vector-database/hybrid-search experience; concern: location/relocation friction."
-CAND_0005509,65,0.297217,Data Scientist with 6 yrs; career history shows shipped ranking/recommendation systems.
-CAND_0076831,66,0.295842,"Search Engineer with 4 yrs; career history shows shipped ranking/recommendation systems, ranking-evaluation rigor (NDCG/MRR/A-B); platform-validated assessments in relevant skills."
-CAND_0044222,67,0.29459,AI Engineer with 8 yrs; career history shows adjacent applied-ML work; concern: location/relocation friction.
-CAND_0008239,68,0.292177,"AI Engineer with 4 yrs; career history shows ranking-evaluation rigor (NDCG/MRR/A-B), shipped ranking/recommendation systems."
-CAND_0080344,69,0.291087,Senior Software Engineer (ML) with 5 yrs; career history shows adjacent applied-ML work.
-CAND_0099806,70,0.290698,"AI Engineer with 5 yrs; career history shows ranking-evaluation rigor (NDCG/MRR/A-B), shipped ranking/recommendation systems."
-CAND_0033179,71,0.290222,AI Research Engineer with 7 yrs; career history shows shipped ranking/recommendation systems.
-CAND_0061655,72,0.288368,"Machine Learning Engineer with 5 yrs; career history shows ranking-evaluation rigor (NDCG/MRR/A-B), shipped ranking/recommendation systems; concern: location/relocation friction."
-CAND_0004402,73,0.287009,AI Research Engineer with 6 yrs; career history shows shipped ranking/recommendation systems; platform-validated assessments in relevant skills.
-CAND_0042100,74,0.286975,"Machine Learning Engineer with 7 yrs; career history shows ranking-evaluation rigor (NDCG/MRR/A-B), shipped ranking/recommendation systems."
-CAND_0036184,75,0.28535,Recommendation Systems Engineer with 6 yrs; career history shows adjacent applied-ML work; concern: location/relocation friction.
-CAND_0055905,76,0.283595,"Senior Machine Learning Engineer with 8 yrs; career history shows embeddings/semantic-search work, ranking-evaluation rigor (NDCG/MRR/A-B), shipped ranking/recommendation systems; platform-validated assessments in relevant skills; concern: location/relocation friction."
-CAND_0089470,77,0.282487,AI Research Engineer with 6 yrs; career history shows shipped ranking/recommendation systems.
-CAND_0079064,78,0.281639,Senior Data Scientist with 5 yrs; career history shows adjacent applied-ML work; concern: 120-day notice period.
-CAND_0043228,79,0.281328,"Applied ML Engineer with 7 yrs; career history shows ranking-evaluation rigor (NDCG/MRR/A-B), shipped ranking/recommendation systems; platform-validated assessments in relevant skills; concern: location/relocation friction."
-CAND_0037566,80,0.280904,Machine Learning Engineer with 7 yrs; career history shows vector-database/hybrid-search experience; platform-validated assessments in relevant skills.
-CAND_0070525,81,0.279526,Senior Software Engineer (ML) with 5 yrs; career history shows adjacent applied-ML work.
-CAND_0018722,82,0.275693,"Recommendation Systems Engineer with 7 yrs; career history shows ranking-evaluation rigor (NDCG/MRR/A-B), shipped ranking/recommendation systems."
-CAND_0003977,83,0.273128,Recommendation Systems Engineer with 5 yrs; career history shows adjacent applied-ML work; platform-validated assessments in relevant skills.
-CAND_0043860,84,0.273055,Junior ML Engineer with 6 yrs; career history shows shipped ranking/recommendation systems.
-CAND_0046924,85,0.272875,Computer Vision Engineer with 6 yrs; career history shows shipped ranking/recommendation systems; platform-validated assessments in relevant skills; concern: 120-day notice period.
-CAND_0076412,86,0.272794,AI Research Engineer with 6 yrs; career history shows shipped ranking/recommendation systems; concern: 120-day notice period.
-CAND_0022023,87,0.268155,AI Research Engineer with 5 yrs; career history shows shipped ranking/recommendation systems; platform-validated assessments in relevant skills.
-CAND_0032271,88,0.267579,AI Research Engineer with 7 yrs; career history shows shipped ranking/recommendation systems; concern: 120-day notice period.
-CAND_0014440,89,0.2672,"Recommendation Systems Engineer with 6 yrs; career history shows ranking-evaluation rigor (NDCG/MRR/A-B), shipped ranking/recommendation systems; concern: location/relocation friction."
-CAND_0062562,90,0.264615,Software Engineer with 7 yrs; career history shows ranking-evaluation rigor (NDCG/MRR/A-B); concern: 120-day notice period.
-CAND_0077285,91,0.263624,"Recommendation Systems Engineer with 6 yrs; career history shows ranking-evaluation rigor (NDCG/MRR/A-B), shipped ranking/recommendation systems; concern: location/relocation friction."
-CAND_0053695,92,0.263376,"Recommendation Systems Engineer with 6 yrs; career history shows ranking-evaluation rigor (NDCG/MRR/A-B), shipped ranking/recommendation systems; concern: location/relocation friction."
-CAND_0033987,93,0.262006,ML Engineer with 7 yrs; career history shows adjacent applied-ML work; platform-validated assessments in relevant skills.
-CAND_0051004,94,0.261701,Senior Data Scientist with 5 yrs; career history shows vector-database/hybrid-search experience; platform-validated assessments in relevant skills.
-CAND_0008517,95,0.261691,AI Research Engineer with 6 yrs; career history shows shipped ranking/recommendation systems; concern: 120-day notice period.
-CAND_0043108,96,0.261261,Backend Engineer with 4 yrs; career history shows ranking-evaluation rigor (NDCG/MRR/A-B).
-CAND_0015967,97,0.260016,Senior Software Engineer (ML) with 5 yrs; career history shows shipped ranking/recommendation systems.
-CAND_0061175,98,0.258684,AI Research Engineer with 7 yrs; career history shows shipped ranking/recommendation systems; concern: 120-day notice period.
-CAND_0087364,99,0.258411,Recommendation Systems Engineer with 5 yrs; career history shows shipped ranking/recommendation systems; platform-validated assessments in relevant skills.
-CAND_0053605,100,0.257369,Senior Software Engineer (ML) with 7 yrs; career history shows shipped ranking/recommendation systems; platform-validated assessments in relevant skills.
+CAND_0046525,1,0.645042,"Senior Machine Learning Engineer with 6 yrs; career history shows embeddings/semantic-search work, ranking-evaluation work; platform-validated assessments in relevant skills."
+CAND_0061257,2,0.639187,Staff Machine Learning Engineer with 8 yrs; career history shows shipped ranking/recommendation systems.
+CAND_0071974,3,0.619134,"Senior AI Engineer with 8 yrs; career history shows embeddings/semantic-search work, vector-database/hybrid-search experience, ranking-evaluation work; platform-validated assessments in relevant skills; concern: location/relocation friction."
+CAND_0054123,4,0.567574,"Applied ML Engineer with 5 yrs; career history shows embeddings/semantic-search work, ranking-evaluation work, shipped ranking/recommendation systems; platform-validated assessments in relevant skills; concern: not flagged open-to-work."
+CAND_0009691,5,0.565887,"Applied ML Engineer with 6 yrs; career history shows embeddings/semantic-search work, ranking-evaluation work, shipped ranking/recommendation systems; concern: prefers remote vs hybrid role, 120-day notice period."
+CAND_0011687,6,0.552399,"Senior NLP Engineer with 8 yrs; career history shows embeddings/semantic-search work, vector-database/hybrid-search experience, ranking-evaluation work; concern: location/relocation friction."
+CAND_0047721,7,0.54854,"Senior Data Scientist with 7 yrs; career history shows embeddings/semantic-search work, ranking-evaluation work, shipped ranking/recommendation systems; platform-validated assessments in relevant skills; concern: not flagged open-to-work."
+CAND_0041669,8,0.543665,"Recommendation Systems Engineer with 8 yrs; career history shows ranking-evaluation work, shipped ranking/recommendation systems; platform-validated assessments in relevant skills."
+CAND_0062247,9,0.525421,AI Engineer with 7 yrs; career history shows adjacent applied-ML work.
+CAND_0064326,10,0.525232,"Search Engineer with 8 yrs; career history shows ranking-evaluation work, shipped ranking/recommendation systems; platform-validated assessments in relevant skills."
+CAND_0049896,11,0.523886,"Search Engineer with 7 yrs; career history shows vector-database/hybrid-search experience, shipped ranking/recommendation systems."
+CAND_0039383,12,0.52304,"Applied ML Engineer with 7 yrs; career history shows ranking-evaluation work, shipped ranking/recommendation systems; platform-validated assessments in relevant skills."
+CAND_0060054,13,0.512932,"AI Engineer with 6 yrs; career history shows embeddings/semantic-search work, ranking-evaluation work, shipped ranking/recommendation systems; concern: not flagged open-to-work."
+CAND_0096142,14,0.498517,"Applied ML Engineer with 5 yrs; career history shows ranking-evaluation work, shipped ranking/recommendation systems; platform-validated assessments in relevant skills; concern: 120-day notice period."
+CAND_0093912,15,0.485366,"Senior Data Scientist with 5 yrs; career history shows ranking-evaluation work, shipped ranking/recommendation systems; concern: location/relocation friction."
+CAND_0026532,16,0.483323,"Recommendation Systems Engineer with 5 yrs; career history shows embeddings/semantic-search work, ranking-evaluation work, shipped ranking/recommendation systems."
+CAND_0061339,17,0.482744,"Search Engineer with 4 yrs; career history shows embeddings/semantic-search work, ranking-evaluation work, shipped ranking/recommendation systems; concern: prefers remote vs hybrid role."
+CAND_0086151,18,0.479253,"Recommendation Systems Engineer with 8 yrs; career history shows ranking-evaluation work, shipped ranking/recommendation systems, embeddings/semantic-search work; platform-validated assessments in relevant skills; concern: prefers remote vs hybrid role, 120-day notice period."
+CAND_0083879,19,0.474692,"Machine Learning Engineer with 7 yrs; career history shows ranking-evaluation work, shipped ranking/recommendation systems."
+CAND_0052328,20,0.469896,"Recommendation Systems Engineer with 6 yrs; career history shows vector-database/hybrid-search experience, shipped ranking/recommendation systems; platform-validated assessments in relevant skills."
+CAND_0006418,21,0.462491,"Machine Learning Engineer with 6 yrs; career history shows ranking-evaluation work, shipped ranking/recommendation systems; platform-validated assessments in relevant skills; concern: prefers remote vs hybrid role."
+CAND_0009024,22,0.455257,"Search Engineer with 5 yrs; career history shows embeddings/semantic-search work, ranking-evaluation work, shipped ranking/recommendation systems; platform-validated assessments in relevant skills; concern: location/relocation friction."
+CAND_0005260,23,0.441911,"Senior NLP Engineer with 5 yrs; career history shows embeddings/semantic-search work, vector-database/hybrid-search experience, ranking-evaluation work; concern: not flagged open-to-work."
+CAND_0010685,24,0.436014,"NLP Engineer with 7 yrs; career history shows ranking-evaluation work, shipped ranking/recommendation systems; concern: prefers remote vs hybrid role, location/relocation friction."
+CAND_0069638,25,0.435448,Computer Vision Engineer with 6 yrs; career history shows shipped ranking/recommendation systems.
+CAND_0031593,26,0.433064,"Search Engineer with 8 yrs; career history shows ranking-evaluation work, shipped ranking/recommendation systems; concern: prefers remote vs hybrid role."
+CAND_0033179,27,0.425557,AI Research Engineer with 7 yrs; career history shows shipped ranking/recommendation systems.
+CAND_0015528,28,0.423544,"Applied ML Engineer with 7 yrs; career history shows embeddings/semantic-search work, ranking-evaluation work, shipped ranking/recommendation systems; concern: not flagged open-to-work, location/relocation friction."
+CAND_0079284,29,0.423376,"Machine Learning Engineer with 5 yrs; career history shows ranking-evaluation work, shipped ranking/recommendation systems, embeddings/semantic-search work; concern: not flagged open-to-work, prefers remote vs hybrid role."
+CAND_0030031,30,0.422722,"AI Engineer with 6 yrs; career history shows embeddings/semantic-search work, ranking-evaluation work, shipped ranking/recommendation systems; platform-validated assessments in relevant skills; concern: not flagged open-to-work, prefers remote vs hybrid role."
+CAND_0080344,31,0.421841,Senior Software Engineer (ML) with 5 yrs; career history shows adjacent applied-ML work.
+CAND_0010257,32,0.419314,Senior Data Scientist with 6 yrs; career history shows adjacent applied-ML work; platform-validated assessments in relevant skills; concern: 120-day notice period.
+CAND_0030348,33,0.41338,"Machine Learning Engineer with 4 yrs; career history shows embeddings/semantic-search work, ranking-evaluation work, shipped ranking/recommendation systems."
+CAND_0055905,34,0.410261,"Senior Machine Learning Engineer with 8 yrs; career history shows embeddings/semantic-search work, ranking-evaluation work, shipped ranking/recommendation systems; platform-validated assessments in relevant skills; concern: prefers remote vs hybrid role, location/relocation friction."
+CAND_0005509,35,0.410196,Data Scientist with 6 yrs; career history shows shipped ranking/recommendation systems; concern: prefers remote vs hybrid role.
+CAND_0058575,36,0.406154,"AI Engineer with 6 yrs; career history shows vector-database/hybrid-search experience, shipped ranking/recommendation systems."
+CAND_0069905,37,0.402411,Applied ML Engineer with 7 yrs; career history shows vector-database/hybrid-search experience.
+CAND_0070525,38,0.401602,Senior Software Engineer (ML) with 5 yrs; career history shows adjacent applied-ML work.
+CAND_0033987,39,0.400675,ML Engineer with 7 yrs; career history shows adjacent applied-ML work; platform-validated assessments in relevant skills.
+CAND_0044222,40,0.400307,AI Engineer with 8 yrs; career history shows adjacent applied-ML work; concern: location/relocation friction.
+CAND_0027691,41,0.400283,NLP Engineer with 6 yrs; career history shows adjacent applied-ML work; platform-validated assessments in relevant skills.
+CAND_0012957,42,0.396728,"Search Engineer with 5 yrs; career history shows ranking-evaluation work, shipped ranking/recommendation systems, embeddings/semantic-search work; concern: not flagged open-to-work, 120-day notice period."
+CAND_0032216,43,0.393245,ML Engineer with 6 yrs; career history shows adjacent applied-ML work.
+CAND_0070485,44,0.390784,"Search Engineer with 6 yrs; career history shows ranking-evaluation work, shipped ranking/recommendation systems; concern: 120-day notice period, location/relocation friction."
+CAND_0078002,45,0.386395,"Machine Learning Engineer with 6 yrs; career history shows ranking-evaluation work, shipped ranking/recommendation systems, embeddings/semantic-search work; platform-validated assessments in relevant skills; concern: location/relocation friction."
+CAND_0098846,46,0.385632,"AI Engineer with 8 yrs; career history shows ranking-evaluation work, shipped ranking/recommendation systems."
+CAND_0076251,47,0.383115,Search Engineer with 8 yrs; career history shows adjacent applied-ML work; platform-validated assessments in relevant skills.
+CAND_0094759,48,0.380306,"Lead AI Engineer with 9 yrs; career history shows embeddings/semantic-search work, ranking-evaluation work, vector-database/hybrid-search experience; platform-validated assessments in relevant skills; concern: not flagged open-to-work, low recruiter response rate."
+CAND_0032271,49,0.379742,AI Research Engineer with 7 yrs; career history shows shipped ranking/recommendation systems; concern: 120-day notice period.
+CAND_0089470,50,0.379433,AI Research Engineer with 6 yrs; career history shows shipped ranking/recommendation systems; concern: not flagged open-to-work.
+CAND_0032955,51,0.378293,Computer Vision Engineer with 5 yrs; career history shows adjacent applied-ML work.
+CAND_0043108,52,0.378057,Backend Engineer with 4 yrs; career history shows ranking-evaluation work.
+CAND_0041610,53,0.376423,"Recommendation Systems Engineer with 7 yrs; career history shows ranking-evaluation work, shipped ranking/recommendation systems; concern: prefers remote vs hybrid role."
+CAND_0017960,54,0.375632,"Recommendation Systems Engineer with 8 yrs; career history shows ranking-evaluation work, shipped ranking/recommendation systems."
+CAND_0076412,55,0.37441,AI Research Engineer with 6 yrs; career history shows shipped ranking/recommendation systems; concern: 120-day notice period.
+CAND_0084943,56,0.373307,Analytics Engineer with 6 yrs; career history shows ranking-evaluation work.
+CAND_0028793,57,0.371716,Search Engineer with 7 yrs; career history shows vector-database/hybrid-search experience; platform-validated assessments in relevant skills; concern: 120-day notice period.
+CAND_0043904,58,0.371563,Data Scientist with 5 yrs; career history shows adjacent applied-ML work.
+CAND_0065878,59,0.369549,"Senior Data Scientist with 8 yrs; career history shows ranking-evaluation work, shipped ranking/recommendation systems, embeddings/semantic-search work; concern: location/relocation friction."
+CAND_0046924,60,0.369431,"Computer Vision Engineer with 6 yrs; career history shows shipped ranking/recommendation systems; platform-validated assessments in relevant skills; concern: not flagged open-to-work, 120-day notice period."
+CAND_0036184,61,0.368389,Recommendation Systems Engineer with 6 yrs; career history shows adjacent applied-ML work; concern: location/relocation friction.
+CAND_0013625,62,0.367753,Senior Software Engineer with 6 yrs; career history shows ranking-evaluation work.
+CAND_0043829,63,0.367286,AI Research Engineer with 5 yrs; career history shows shipped ranking/recommendation systems.
+CAND_0088385,64,0.366384,Computer Vision Engineer with 7 yrs; career history shows adjacent applied-ML work.
+CAND_0008517,65,0.365414,AI Research Engineer with 6 yrs; career history shows shipped ranking/recommendation systems; concern: 120-day notice period.
+CAND_0011162,66,0.364328,"Recommendation Systems Engineer with 6 yrs; career history shows ranking-evaluation work, shipped ranking/recommendation systems."
+CAND_0013988,67,0.364101,Junior ML Engineer with 5 yrs; career history shows shipped ranking/recommendation systems; concern: location/relocation friction.
+CAND_0004402,68,0.363901,AI Research Engineer with 6 yrs; career history shows shipped ranking/recommendation systems; platform-validated assessments in relevant skills.
+CAND_0062562,69,0.363454,Software Engineer with 7 yrs; career history shows ranking-evaluation work; concern: 120-day notice period.
+CAND_0033649,70,0.361292,Data Scientist with 5 yrs; career history shows adjacent applied-ML work; platform-validated assessments in relevant skills.
+CAND_0019159,71,0.361232,ML Engineer with 6 yrs; career history shows adjacent applied-ML work; concern: not flagged open-to-work.
+CAND_0066999,72,0.361011,"Recommendation Systems Engineer with 6 yrs; career history shows ranking-evaluation work, shipped ranking/recommendation systems; platform-validated assessments in relevant skills; concern: prefers remote vs hybrid role."
+CAND_0017648,73,0.360458,AI Specialist with 4 yrs; career history shows shipped ranking/recommendation systems; concern: 120-day notice period.
+CAND_0054394,74,0.360148,"Recommendation Systems Engineer with 4 yrs; career history shows ranking-evaluation work, shipped ranking/recommendation systems."
+CAND_0015967,75,0.359907,Senior Software Engineer (ML) with 5 yrs; career history shows shipped ranking/recommendation systems.
+CAND_0051003,76,0.359616,Senior Software Engineer (ML) with 4 yrs; career history shows adjacent applied-ML work.
+CAND_0076163,77,0.357457,"NLP Engineer with 7 yrs; career history shows ranking-evaluation work, shipped ranking/recommendation systems; platform-validated assessments in relevant skills; concern: location/relocation friction."
+CAND_0052335,78,0.35689,"Applied ML Engineer with 6 yrs; career history shows ranking-evaluation work, shipped ranking/recommendation systems."
+CAND_0090300,79,0.355595,AI Research Engineer with 5 yrs; career history shows shipped ranking/recommendation systems; concern: 120-day notice period.
+CAND_0060072,80,0.355267,"Staff Machine Learning Engineer with 6 yrs; career history shows embeddings/semantic-search work, ranking-evaluation work, shipped ranking/recommendation systems; concern: not flagged open-to-work, low recruiter response rate."
+CAND_0088335,81,0.354347,AI Research Engineer with 6 yrs; career history shows shipped ranking/recommendation systems; concern: not flagged open-to-work.
+CAND_0051292,82,0.353891,"Applied ML Engineer with 5 yrs; career history shows ranking-evaluation work, shipped ranking/recommendation systems; concern: location/relocation friction."
+CAND_0098780,83,0.353174,AI Research Engineer with 6 yrs; career history shows shipped ranking/recommendation systems; concern: location/relocation friction.
+CAND_0021491,84,0.353157,AI Research Engineer with 6 yrs; career history shows shipped ranking/recommendation systems; platform-validated assessments in relevant skills; concern: location/relocation friction.
+CAND_0052706,85,0.352259,AI Research Engineer with 5 yrs; career history shows shipped ranking/recommendation systems; concern: location/relocation friction.
+CAND_0075439,86,0.350841,"Machine Learning Engineer with 4 yrs; career history shows vector-database/hybrid-search experience, embeddings/semantic-search work, ranking-evaluation work; concern: not flagged open-to-work, location/relocation friction."
+CAND_0043228,87,0.349985,"Applied ML Engineer with 7 yrs; career history shows ranking-evaluation work, shipped ranking/recommendation systems; platform-validated assessments in relevant skills; concern: not flagged open-to-work, location/relocation friction."
+CAND_0048265,88,0.349752,AI Research Engineer with 4 yrs; career history shows shipped ranking/recommendation systems; concern: not flagged open-to-work.
+CAND_0059017,89,0.349683,AI Research Engineer with 7 yrs; career history shows shipped ranking/recommendation systems.
+CAND_0064904,90,0.349296,"AI Engineer with 5 yrs; career history shows embeddings/semantic-search work, ranking-evaluation work, shipped ranking/recommendation systems."
+CAND_0043860,91,0.346048,Junior ML Engineer with 6 yrs; career history shows shipped ranking/recommendation systems.
+CAND_0042100,92,0.345693,"Machine Learning Engineer with 7 yrs; career history shows ranking-evaluation work, shipped ranking/recommendation systems."
+CAND_0042056,93,0.3442,AI Research Engineer with 3 yrs; career history shows shipped ranking/recommendation systems.
+CAND_0074225,94,0.342283,"Machine Learning Engineer with 4 yrs; career history shows ranking-evaluation work, shipped ranking/recommendation systems, vector-database/hybrid-search experience; platform-validated assessments in relevant skills; concern: 120-day notice period."
+CAND_0046064,95,0.341836,"Senior NLP Engineer with 9 yrs; career history shows embeddings/semantic-search work, vector-database/hybrid-search experience, ranking-evaluation work; concern: location/relocation friction."
+CAND_0005311,96,0.341742,AI Research Engineer with 6 yrs; career history shows shipped ranking/recommendation systems; platform-validated assessments in relevant skills.
+CAND_0061175,97,0.341196,AI Research Engineer with 7 yrs; career history shows shipped ranking/recommendation systems; concern: 120-day notice period.
+CAND_0022023,98,0.340196,AI Research Engineer with 5 yrs; career history shows shipped ranking/recommendation systems; platform-validated assessments in relevant skills; concern: prefers remote vs hybrid role.
+CAND_0073556,99,0.339168,AI Research Engineer with 4 yrs; career history shows shipped ranking/recommendation systems; platform-validated assessments in relevant skills; concern: not flagged open-to-work.
+CAND_0074123,100,0.338351,Data Scientist with 7 yrs; career history shows adjacent applied-ML work.

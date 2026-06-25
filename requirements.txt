@@ -1,13 +1,15 @@
-# [rank step] — minimal deps for the constrained ranking step
-# (rank.py, validate_submission.py). CPU only, no network.
+# [rank step] — minimal deps for the constrained ranking step (rank.py:
+# loads parquet artifacts + LightGBM student, no transformers). CPU only.
 numpy
 pandas
 pyarrow
 orjson
 psutil
+lightgbm
 
-# [precompute] — additional deps for the one-time artifact build (run_step35.py:
-# bi-encoder embeddings, BM25, structured features). May use GPU; unconstrained.
+# [precompute] — additional deps for the one-time offline phase
+# (run_step35.py embeddings/BM25, precompute_teacher.py cross-encoder on GPU,
+# train_student.py LightGBM tuning — lightgbm already listed above).
 scikit-learn
 rank-bm25
 sentence-transformers
