@@ -1,0 +1,48 @@
+# --- large organiser-provided input (regenerable / not ours) ---
+candidates.jsonl
+sample_candidates.json.gz
+
+# --- derived embeddings: ~620 MB, regenerable via precompute.py (we ship the
+#     script, not the blob). The ~17 MB rank-step parquets/model/json ARE committed. ---
+artifacts_full/*.npy
+artifacts_full/_incremental/
+artifacts_v6/
+artifacts/
+artifacts_smoke/
+
+# --- iteration source folder: the history is encoded as commits, not this dir ---
+versions/
+
+# --- staging area for the replay runbook (final README etc.); never committed ---
+submission_assets/
+COMMANDS.md
+
+# --- python / env ---
+__pycache__/
+*.py[cod]
+*$py.class
+.venv/
+venv/
+ENV/
+.pytest_cache/
+
+# --- run/telemetry scratch + diagnostics (regenerated each run) ---
+rank_telemetry.json
+telemetry.json
+top100candidates.jsonl
+submission_blend.csv
+resource_log.json
+
+# --- docs/binaries we don't track ---
+*.docx
+report*.html
+rec*.txt
+docs_txt/
+d_tmp*
+f_tmp*
+
+# --- OS / IDE ---
+.DS_Store
+.vscode/
+.idea/
+*.swp
