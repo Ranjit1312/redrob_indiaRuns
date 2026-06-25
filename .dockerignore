@@ -1,0 +1,39 @@
+# Keep the image slim and the rank step CPU-only. The RANK image needs the
+# ~17 MB artifacts_full/*.parquet|*.txt|*.json (NOT excluded) + the app code.
+
+# Version control / planning
+.git
+.gitignore
+.gitattributes
+.github
+
+# Iteration source history (code is promoted to repo root)
+versions/
+
+# Large input + derived embeddings — candidates.jsonl is volume-mounted at run
+# time; the .npy embeddings are not read by the rank step.
+candidates.jsonl
+artifacts_full/*.npy
+artifacts_full/_incremental/
+artifacts_v6/
+artifacts/
+artifacts_smoke/
+
+# Python / env / test scratch
+__pycache__/
+*.py[cod]
+.venv/
+venv/
+.pytest_cache/
+tests/
+
+# Docs / scratch not needed at runtime
+*.docx
+*.md
+report*.html
+rec*.txt
+docs_txt/
+d_tmp*
+f_tmp*
+rank_telemetry.json
+top100candidates.jsonl

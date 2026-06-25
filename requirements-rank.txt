@@ -1,0 +1,7 @@
+numpy>=2.4
+pandas>=3.0
+pyarrow>=24
+orjson>=3.11
+psutil>=7
+lightgbm>=4.6
+pyyaml>=6          # v6 reads jd_profile.yaml; harmless for v1-v5
