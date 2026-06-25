@@ -1,0 +1,101 @@
+candidate_id,rank,score,reasoning
+CAND_0061257,1,0.84668,Staff Machine Learning Engineer with 8 yrs; evidence strongest in applied ML in production and ranking/recommender systems.
+CAND_0062247,2,0.804109,AI Engineer with 7 yrs; evidence strongest in embeddings-based retrieval and ranking/recommender systems.
+CAND_0010685,3,0.745846,NLP Engineer with 7 yrs; evidence strongest in applied ML in production and ranking/recommender systems.
+CAND_0079064,4,0.733332,Senior Data Scientist with 5 yrs; evidence strongest in embeddings-based retrieval and vector/hybrid search.
+CAND_0069638,5,0.721851,Computer Vision Engineer with 6 yrs; evidence strongest in ranking/recommender systems and applied ML in production.
+CAND_0026532,6,0.713358,Recommendation Systems Engineer with 5 yrs; evidence strongest in ranking/recommender systems and embeddings-based retrieval.
+CAND_0030348,7,0.693315,Machine Learning Engineer with 4 yrs; evidence strongest in embeddings-based retrieval and ranking/recommender systems.
+CAND_0083879,8,0.691128,Machine Learning Engineer with 7 yrs; evidence strongest in applied ML in production and ranking/recommender systems.
+CAND_0039383,9,0.690765,Applied ML Engineer with 7 yrs; evidence strongest in applied ML in production and ranking evaluation.
+CAND_0039983,10,0.689836,Computer Vision Engineer with 7 yrs; evidence strongest in applied ML in production and ranking/recommender systems.
+CAND_0060054,11,0.689136,AI Engineer with 6 yrs; evidence strongest in embeddings-based retrieval and ranking/recommender systems.
+CAND_0064326,12,0.688861,Search Engineer with 8 yrs; evidence strongest in ranking/recommender systems and applied ML in production.
+CAND_0005509,13,0.677229,Data Scientist with 6 yrs; evidence strongest in ranking/recommender systems and applied ML in production.
+CAND_0091534,14,0.667824,AI Engineer with 17 yrs; evidence strongest in ranking/recommender systems and applied ML in production.
+CAND_0086151,15,0.666034,Recommendation Systems Engineer with 8 yrs; evidence strongest in ranking/recommender systems and ranking evaluation.
+CAND_0058575,16,0.662784,AI Engineer with 6 yrs; evidence strongest in embeddings-based retrieval and ranking/recommender systems.
+CAND_0041669,17,0.661896,Recommendation Systems Engineer with 8 yrs; evidence strongest in ranking/recommender systems and ranking evaluation.
+CAND_0008517,18,0.655572,AI Research Engineer with 6 yrs; evidence strongest in applied ML in production and ranking/recommender systems.
+CAND_0080472,19,0.654535,Junior ML Engineer with 4 yrs; evidence strongest in applied ML in production and ranking/recommender systems.
+CAND_0055905,20,0.651706,Senior Machine Learning Engineer with 8 yrs; evidence strongest in applied ML in production and embeddings-based retrieval.
+CAND_0069905,21,0.65125,Applied ML Engineer with 7 yrs; evidence strongest in embeddings-based retrieval and vector/hybrid search.
+CAND_0070525,22,0.650049,Senior Software Engineer (ML) with 5 yrs; evidence strongest in applied ML in production and ranking/recommender systems.
+CAND_0052328,23,0.649348,Recommendation Systems Engineer with 6 yrs; evidence strongest in ranking/recommender systems and applied ML in production.
+CAND_0076412,24,0.649145,AI Research Engineer with 6 yrs; evidence strongest in applied ML in production and ranking/recommender systems.
+CAND_0055992,25,0.645967,AI Engineer with 17 yrs; evidence strongest in ranking/recommender systems and applied ML in production.
+CAND_0089470,26,0.641158,AI Research Engineer with 6 yrs; evidence strongest in applied ML in production and ranking/recommender systems.
+CAND_0080344,27,0.63942,Senior Software Engineer (ML) with 5 yrs; evidence strongest in applied ML in production and ranking/recommender systems.
+CAND_0032216,28,0.638774,ML Engineer with 6 yrs; evidence strongest in applied ML in production and LLM fine-tuning.
+CAND_0032271,29,0.635934,AI Research Engineer with 7 yrs; evidence strongest in applied ML in production and ranking/recommender systems.
+CAND_0046924,30,0.634284,Computer Vision Engineer with 6 yrs; evidence strongest in applied ML in production and ranking/recommender systems.
+CAND_0099401,31,0.634174,NLP Engineer with 8 yrs; evidence strongest in applied ML in production and ranking/recommender systems.
+CAND_0043384,32,0.63325,Computer Vision Engineer with 5 yrs; evidence strongest in applied ML in production and ranking/recommender systems.
+CAND_0070485,33,0.633079,Search Engineer with 6 yrs; evidence strongest in embeddings-based retrieval and ranking/recommender systems.
+CAND_0049896,34,0.632292,Search Engineer with 7 yrs; evidence strongest in ranking/recommender systems and applied ML in production.
+CAND_0027691,35,0.632007,NLP Engineer with 6 yrs; evidence strongest in applied ML in production and embeddings-based retrieval.
+CAND_0010257,36,0.630629,Senior Data Scientist with 6 yrs; evidence strongest in applied ML in production and ranking/recommender systems.
+CAND_0089381,37,0.627596,Computer Vision Engineer with 6 yrs; evidence strongest in applied ML in production and ranking/recommender systems.
+CAND_0033179,38,0.627579,AI Research Engineer with 7 yrs; evidence strongest in applied ML in production and ranking/recommender systems.
+CAND_0053527,39,0.626193,Junior ML Engineer with 7 yrs; evidence strongest in ranking/recommender systems and applied ML in production.
+CAND_0093912,40,0.618716,Senior Data Scientist with 5 yrs; evidence strongest in ranking/recommender systems and ranking evaluation.
+CAND_0005260,41,0.614913,Senior NLP Engineer with 5 yrs; evidence strongest in LLM fine-tuning and ranking evaluation.
+CAND_0040887,42,0.614441,Machine Learning Engineer with 5 yrs; evidence strongest in embeddings-based retrieval and vector/hybrid search.
+CAND_0016163,43,0.612546,Applied ML Engineer with 7 yrs; evidence strongest in applied ML in production and embeddings-based retrieval.
+CAND_0080794,44,0.608566,AI Research Engineer with 6 yrs; evidence strongest in applied ML in production and ranking/recommender systems.
+CAND_0052335,45,0.607566,Applied ML Engineer with 6 yrs; evidence strongest in applied ML in production and ranking/recommender systems.
+CAND_0088385,46,0.604697,Computer Vision Engineer with 7 yrs; evidence strongest in applied ML in production and LLM fine-tuning.
+CAND_0043904,47,0.602752,Data Scientist with 5 yrs; evidence strongest in applied ML in production and ranking/recommender systems.
+CAND_0076251,48,0.601267,Search Engineer with 8 yrs; evidence strongest in embeddings-based retrieval and applied ML in production.
+CAND_0098780,49,0.600324,AI Research Engineer with 6 yrs; evidence strongest in applied ML in production and ranking/recommender systems.
+CAND_0079284,50,0.600264,Machine Learning Engineer with 5 yrs; evidence strongest in applied ML in production and ranking/recommender systems.
+CAND_0044222,51,0.598746,AI Engineer with 8 yrs; evidence strongest in embeddings-based retrieval and ranking/recommender systems.
+CAND_0090300,52,0.591728,AI Research Engineer with 5 yrs; evidence strongest in applied ML in production and ranking/recommender systems.
+CAND_0057453,53,0.590956,Computer Vision Engineer with 4 yrs; evidence strongest in applied ML in production and ranking/recommender systems.
+CAND_0033987,54,0.589837,ML Engineer with 7 yrs; evidence strongest in applied ML in production and ranking/recommender systems.
+CAND_0036184,55,0.588023,Recommendation Systems Engineer with 6 yrs; evidence strongest in embeddings-based retrieval and ranking/recommender systems.
+CAND_0064256,56,0.587663,Junior ML Engineer with 6 yrs; evidence strongest in applied ML in production and LLM fine-tuning.
+CAND_0019159,57,0.587498,ML Engineer with 6 yrs; evidence strongest in applied ML in production and LLM fine-tuning.
+CAND_0071974,58,0.587408,Senior AI Engineer with 8 yrs; evidence strongest in ranking/recommender systems and ranking evaluation.
+CAND_0054394,59,0.585934,Recommendation Systems Engineer with 4 yrs; evidence strongest in ranking/recommender systems and embeddings-based retrieval.
+CAND_0021014,60,0.583623,Junior ML Engineer with 5 yrs; evidence strongest in applied ML in production and LLM fine-tuning.
+CAND_0060072,61,0.583261,Staff Machine Learning Engineer with 6 yrs; evidence strongest in ranking/recommender systems and applied ML in production; concern: low recruiter response rate.
+CAND_0061175,62,0.582997,AI Research Engineer with 7 yrs; evidence strongest in ranking/recommender systems and applied ML in production.
+CAND_0012957,63,0.582709,Search Engineer with 5 yrs; evidence strongest in ranking/recommender systems and ranking evaluation.
+CAND_0018722,64,0.582397,Recommendation Systems Engineer with 7 yrs; evidence strongest in ranking/recommender systems and embeddings-based retrieval.
+CAND_0002344,65,0.581524,Senior Software Engineer (ML) with 5 yrs; evidence strongest in applied ML in production and LLM fine-tuning.
+CAND_0043228,66,0.579133,Applied ML Engineer with 7 yrs; evidence strongest in applied ML in production and ranking/recommender systems.
+CAND_0090155,67,0.578314,ML Engineer with 6 yrs; evidence strongest in applied ML in production and ranking/recommender systems.
+CAND_0007412,68,0.578259,Applied ML Engineer with 7 yrs; evidence strongest in applied ML in production and ranking/recommender systems.
+CAND_0053472,69,0.577765,Senior Software Engineer (ML) with 6 yrs; evidence strongest in applied ML in production and LLM fine-tuning.
+CAND_0004402,70,0.577548,AI Research Engineer with 6 yrs; evidence strongest in ranking/recommender systems and applied ML in production.
+CAND_0062562,71,0.577385,Software Engineer with 7 yrs; evidence strongest in applied ML in production and ranking evaluation.
+CAND_0094292,72,0.574148,AI Specialist with 6 yrs; evidence strongest in applied ML in production and embeddings-based retrieval.
+CAND_0015967,73,0.573657,Senior Software Engineer (ML) with 5 yrs; evidence strongest in applied ML in production and ranking/recommender systems.
+CAND_0054123,74,0.573422,Applied ML Engineer with 5 yrs; evidence strongest in ranking/recommender systems and applied ML in production.
+CAND_0051219,75,0.572338,AI Research Engineer with 4 yrs; evidence strongest in applied ML in production and ranking/recommender systems.
+CAND_0009691,76,0.571992,Applied ML Engineer with 6 yrs; evidence strongest in ranking/recommender systems and applied ML in production.
+CAND_0010603,77,0.571989,ML Engineer with 5 yrs; evidence strongest in applied ML in production and ranking/recommender systems.
+CAND_0025663,78,0.571664,Computer Vision Engineer with 6 yrs; evidence strongest in applied ML in production and ranking/recommender systems.
+CAND_0094482,79,0.569928,Junior ML Engineer with 6 yrs; evidence strongest in applied ML in production and LLM fine-tuning.
+CAND_0043860,80,0.567759,Junior ML Engineer with 6 yrs; evidence strongest in ranking/recommender systems and applied ML in production.
+CAND_0021486,81,0.566819,Computer Vision Engineer with 6 yrs; evidence strongest in applied ML in production and embeddings-based retrieval.
+CAND_0031593,82,0.566652,Search Engineer with 8 yrs; evidence strongest in ranking/recommender systems and ranking evaluation.
+CAND_0032955,83,0.560911,Computer Vision Engineer with 5 yrs; evidence strongest in applied ML in production and ranking/recommender systems.
+CAND_0000273,84,0.558764,ML Engineer with 6 yrs; evidence strongest in applied ML in production and ranking/recommender systems.
+CAND_0063585,85,0.558348,AI Research Engineer with 3 yrs; evidence strongest in ranking/recommender systems and applied ML in production.
+CAND_0094685,86,0.557608,AI Research Engineer with 4 yrs; evidence strongest in ranking/recommender systems and applied ML in production.
+CAND_0017960,87,0.556823,Recommendation Systems Engineer with 8 yrs; evidence strongest in ranking/recommender systems and applied ML in production.
+CAND_0043829,88,0.554762,AI Research Engineer with 5 yrs; evidence strongest in applied ML in production and ranking/recommender systems.
+CAND_0042100,89,0.554689,Machine Learning Engineer with 7 yrs; evidence strongest in applied ML in production and ranking/recommender systems.
+CAND_0018094,90,0.552229,ML Engineer with 5 yrs; evidence strongest in applied ML in production and ranking/recommender systems.
+CAND_0000031,91,0.5516,Recommendation Systems Engineer with 6 yrs; evidence strongest in ranking/recommender systems and ranking evaluation.
+CAND_0017648,92,0.55045,AI Specialist with 4 yrs; evidence strongest in ranking/recommender systems and applied ML in production; concern: no recent hands-on coding role.
+CAND_0014858,93,0.550372,AI Research Engineer with 5 yrs; evidence strongest in applied ML in production and ranking/recommender systems.
+CAND_0095042,94,0.550102,Senior Software Engineer (ML) with 5 yrs; evidence strongest in applied ML in production and LLM fine-tuning.
+CAND_0087630,95,0.549454,AI Engineer with 7 yrs; evidence strongest in ranking/recommender systems and applied ML in production.
+CAND_0046525,96,0.54912,Senior Machine Learning Engineer with 6 yrs; evidence strongest in applied ML in production and ranking/recommender systems.
+CAND_0060315,97,0.548528,Senior Software Engineer (ML) with 5 yrs; evidence strongest in applied ML in production and ranking/recommender systems.
+CAND_0003977,98,0.546726,Recommendation Systems Engineer with 5 yrs; evidence strongest in embeddings-based retrieval and ranking/recommender systems.
+CAND_0005538,99,0.54625,Senior AI Engineer with 6 yrs; evidence strongest in applied ML in production and ranking/recommender systems.
+CAND_0033911,100,0.545323,Data Scientist with 7 yrs; evidence strongest in applied ML in production and ranking/recommender systems.

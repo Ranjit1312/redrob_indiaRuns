@@ -1,0 +1,15 @@
+# [rank step] — minimal deps for the constrained ranking step (rank.py,
+# validate_submission.py). CPU only, no network, <=5 min, <=16 GB.
+numpy
+pandas
+pyarrow
+orjson
+psutil
+
+# [precompute] — additional deps for the one-time artifact build (run_step35.py:
+# bi-encoder embeddings, BM25, structured features). May use GPU; unconstrained.
+scikit-learn
+rank-bm25
+sentence-transformers
+torch
+tqdm
