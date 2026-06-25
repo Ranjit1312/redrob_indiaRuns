@@ -1,5 +1,5 @@
-# [rank step] — minimal deps for the constrained ranking step (rank.py,
-# validate_submission.py). CPU only, no network, <=5 min, <=16 GB.
+# [rank step] — minimal deps for the constrained ranking step
+# (rank.py, validate_submission.py). CPU only, no network.
 numpy
 pandas
 pyarrow
