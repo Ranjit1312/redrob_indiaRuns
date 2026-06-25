@@ -4,7 +4,10 @@ CPU only, no network). No limits are enforced here — instead it records full
 telemetry per stage (wall, CPU, RSS, peak RAM) plus the disk footprint of every
 artifact it depends on, written to rank_telemetry.json in this directory.
 
-What it does (mirrors rescore.py, but as the single reproduction command):
+STRUCTURALLY CPU-only: this file imports numpy/pandas/pyarrow/orjson/psutil/
+lightgbm and nothing else — torch and sentence-transformers are never imported.
+
+What it does (the single Stage-3 reproduction command):
     1. load precomputed feature artifacts + LightGBM student   (no transformers)
     2. predict student scores for all 100K
     3. recompute the deterministic composite (pure numpy) and blend (a=0.2)
@@ -12,14 +15,28 @@ What it does (mirrors rescore.py, but as the single reproduction command):
     5. top-100 via argpartition; stream candidates.jsonl for the 100 profiles
     6. write submission.csv with grounded reasoning
 
-    python rank.py
+    python rank.py --candidates ..\\..\\candidates.jsonl --out .\\submission.csv
 """
-import argparse, csv, json, os, time
+import argparse, csv, json, os, re, time
 
 import numpy as np
 import pandas as pd
 import psutil
 import lightgbm as lgb
+
+# Fast candidate_id extractor — avoids a full JSON parse of every line when we
+# only need the id set for the coverage check (keeps the constrained step cheap).
+_CID_RE = re.compile(rb'"candidate_id"\s*:\s*"(CAND_\d+)"')
+
+def scan_candidate_ids(path):
+    """Stream candidates.jsonl once and return the set of candidate_ids in it."""
+    ids = set()
+    with open(path, "rb") as f:
+        for line in f:
+            m = _CID_RE.search(line)
+            if m:
+                ids.add(m.group(1).decode())
+    return ids
 
 BASE = os.environ.get("RANKER_ROOT") or os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 OUT = os.path.dirname(os.path.abspath(__file__))
@@ -56,6 +73,12 @@ def main():
     ap.add_argument("--candidates", default=os.path.join(BASE, "candidates.jsonl"))
     ap.add_argument("--out", default=os.path.join(OUT, "submission.csv"))
     ap.add_argument("--topk", type=int, default=100)
+    ap.add_argument("--no-coverage-check", action="store_true",
+                    help="skip the candidate_id coverage scan (restores the minimal "
+                         "~3.6s path; only safe when candidates.jsonl is the precomputed pool)")
+    ap.add_argument("--strict-coverage", action="store_true",
+                    help="abort (exit 2) if ANY supplied candidate_id is missing from "
+                         "the precomputed artifacts instead of warning + ranking the covered subset")
     args = ap.parse_args()
     t = T(); t_all = time.time()
     import orjson
@@ -71,6 +94,38 @@ def main():
 
     # ---- 1. load artifacts -------------------------------------------------------
     feats = pd.read_parquet(os.path.join(ART, "features.parquet"))
+
+    # ---- 1a. coverage check: only candidates with precomputed features can be ranked.
+    # On the official pool (candidates.jsonl == the precomputed pool) this is a no-op:
+    # `covered == feat_ids` so no restriction happens and the output stays byte-identical.
+    # On a NEW/partial dataset it restricts ranking to the candidates we actually have
+    # features for and tells the operator how to precompute the missing ones.
+    if not args.no_coverage_check:
+        wanted = scan_candidate_ids(args.candidates)
+        feat_ids = set(feats.index)
+        covered = wanted & feat_ids
+        missing = wanted - feat_ids
+        if not wanted:
+            print(f"[rank][WARN] no candidate_ids read from {args.candidates}; "
+                  f"skipping coverage check and ranking the full precomputed pool.")
+        else:
+            if missing:
+                print(f"[rank][WARN] {len(missing)} of {len(wanted)} supplied candidate_ids "
+                      f"have NO precomputed features and cannot be ranked (new candidates).")
+                print(f"[rank][WARN] Run the one-time UNCONSTRAINED precompute for just the new ids:")
+                print(f"[rank][WARN]     python precompute.py --candidates {args.candidates}")
+                print(f"[rank][WARN] then re-run this command. (Precompute may use GPU/network; "
+                      f"the rank step never does.)")
+            if not covered:
+                raise SystemExit("[rank] FATAL: none of the supplied candidates have "
+                                 "precomputed features — run precompute.py first.")
+            if covered != feat_ids:           # supplied set is a subset → rank only those
+                feats = feats.loc[feats.index.isin(covered)]
+                print(f"[rank] ranking the {len(feats)} supplied candidates that have features.")
+            if missing and args.strict_coverage:
+                raise SystemExit("[rank] --strict-coverage set and candidates are missing; aborting.")
+        t.mark("coverage_check")
+
     ref = pd.read_parquet(os.path.join(ART, "features_refined_v3.parquet"))
     v4 = pd.read_parquet(os.path.join(ART, "features_v4.parquet")).loc[feats.index]
     sig = pd.read_parquet(os.path.join(ART, "signals_features.parquet"))
@@ -84,7 +139,7 @@ def main():
     lgbm_score = booster.predict(X[feat_cols].astype("float32").values)
     t.mark("lgbm_predict_100k")
 
-    # ---- 3. deterministic composite (pure numpy, replicates refine_v3) ------------
+    # ---- 3. deterministic composite (pure numpy, replicates the rule pass) --------
     FACETS = ["retrieval", "vectordb", "ranking", "evaluation", "applied_ml", "llm_ft"]
     dense_fit = (0.28 * X["ranking__recencywt"] + 0.22 * X["retrieval__recencywt"] +
                  0.12 * X["vectordb__recencywt"] + 0.10 * X["evaluation__recencywt"] +
@@ -125,7 +180,7 @@ def main():
     t.mark("composite_blend_gates")
 
     # ---- 4. top-100 -----------------------------------------------------------------
-    k = args.topk
+    k = min(args.topk, len(idx))          # fewer candidates than topk (e.g. demo uploads) is fine
     pos = np.argpartition(-final, k - 1)[:k]
     cov = X["evid_coverage"].values
     pos = pos[np.lexsort((idx.values[pos], -cov[pos], -final[pos]))]

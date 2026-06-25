@@ -1,17 +1,21 @@
-# [rank step] — minimal deps for the constrained ranking step (rank.py:
-# loads parquet artifacts + LightGBM student, no transformers). CPU only.
-numpy
-pandas
-pyarrow
-orjson
-psutil
-lightgbm
+# [rank step] — the ONLY packages the constrained ranking step needs
+# (rank.py, validate_submission.py). CPU only, no network, <=5 min, <=16 GB.
+# Install JUST this section into the rank venv: torch / sentence-transformers
+# are deliberately absent, so GPU use in the rank step is impossible by
+# construction.
+numpy>=2.4
+pandas>=3.0
+pyarrow>=24
+orjson>=3.11
+psutil>=7
+lightgbm>=4.6
 
-# [precompute] — additional deps for the one-time offline phase
-# (run_step35.py embeddings/BM25, precompute_teacher.py cross-encoder on GPU,
-# train_student.py LightGBM tuning — lightgbm already listed above).
+# [precompute] — additional deps for the one-time offline phase only
+# (precompute.py: run_step35.py embeddings/BM25, precompute_teacher.py
+# cross-encoder on GPU, train_student.py LightGBM tuning — lightgbm already
+# listed above). May use GPU; unconstrained.
 scikit-learn
 rank-bm25
-sentence-transformers
-torch
+sentence-transformers>=5
+torch>=2.12
 tqdm

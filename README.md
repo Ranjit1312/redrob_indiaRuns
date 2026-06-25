@@ -1,94 +1,161 @@
-# v4 — Teacher-student distillation + full-profile-audit rules (final)
+# RedRob Candidate Ranker — Intelligent Candidate Discovery & Ranking
 
-v3 plus a GPU cross-encoder teacher distilled into a tuned LightGBM LambdaMART
-student blended at alpha=0.2, and the base-rate-verified rules from the
-full-profile audit. This is the submitted configuration (`rank.py`).
+Ranks the candidate pool for the Redrob "Senior AI Engineer — Founding Team" JD by
+**meaning, not keyword matching**, and down-weights behaviourally unavailable or
+trap candidates. Two phases: an **unconstrained offline precompute** (embeddings +
+teacher→student distillation, GPU optional) and a **constrained CPU-only ranking
+step** that produces the submission CSV in seconds.
 
-## The rules this version applies (on top of v3)
+## The one reproduce command (Stage-3 ranking step)
 
-1. **Cross-encoder teacher: bge-reranker-v2-m3** — chosen with **8K context
-   after measuring 27.3% truncation at 512 tokens** with the default
-   bge-reranker-base (evidence p99 ~641 tokens, max 861 — truncation cut exactly
-   the early-career pre-LLM ML the JD asks about). Positive-evidence-only JD
-   query (a relevance CE can't follow "NOT a researcher"). Bias-validated on
-   corpus templates and probes before trusting: the plain-language Tier-5
-   (0.691) outranked the keyword-claimer (0.671).
-2. **Gated pseudo-labels** — `pseudo_label = sigmoid(CE logit) x anti-stuffer
-   corroboration gate x integrity`, so residual CE bias cannot propagate into
-   the student. 8K shortlist + 4K random negatives.
-3. **Tuned LightGBM LambdaMART student** — lambdarank over 16 qcut label bins
-   (`label_gain = 2^i - 1`), ~500-doc pseudo-groups, **stratified** 20% holdout
-   and 4-fold CV, **coordinate descent** from the proven incumbent (21 configs;
-   winning moves were more regularization: lr 0.08, min-leaf 80,
-   feature-fraction 0.6). Holdout NDCG@10 0.6613 vs 0.6151 untuned.
-4. **Blend at alpha=0.2** — `final = minmax(0.2*LGBM + 0.8*rules-fit) x integrity
-   x availability x notice`; the alpha-sweep peaked at 0.2 (0.9277 vs 0.8992
-   rules-only, +2.9 pts) and 0.2 is the conservative pick.
-5. **Full-profile-audit rules** (each base-rate-verified before encoding):
-   - dormant (inactive > 6 months AND recruiter response < 0.2): availability
-     **x0.5** — the JD's own worked exclusion example (3.7% of pool);
-   - low-response-alone (< 0.2, not dormant): **x0.8**;
-   - certification anachronism (LangChain dated < 2022 / LLaMA < 2023):
-     integrity **x0.30** (45 in pool — rare authenticity fingerprint);
-   - activity-before-signup: integrity **x0.97** soft (7.5% of pool = generator noise);
-   - concurrent same-window degrees: integrity **x0.93** soft (0.73%);
-   - remote-pref location caps: remote+no-reloc+non-target-city capped at 0.25,
-     any remote-pref x0.9 (JD is hybrid Tue/Thu); India non-target no-reloc 0.40 -> 0.33;
-   - notice tiers **1.0 / 0.93 / 0.90 / 0.85** (<=90d / <120d / =120d / >120d);
-   - **evidence-coverage tie-break** before candidate_id in the top-100 sort.
-
-## Why (from the audits — see ../audit_report.md, Rounds 4-5)
-
-- The **full-profile audit (complete JD + every field) returned verdict MAJOR**:
-  the JD's literal dormant-and-unresponsive exclusion example sat at rank 17;
-  LangChain-2018 cert anachronisms, education impossibilities, and
-  signup-vs-activity contradictions were invisible to the field-subset audits.
-- **Base-rate verification demoted 3 of the auditor's 5 proposed removals to
-  soft penalties**: activity-before-signup hits 7,496 candidates,
-  career-before-education 19,499, concurrent degrees 728 — pervasive synthetic
-  noise, none can be among ~80 honeypots. The rare fingerprints (45 anachronisms,
-  3.7% dormant) became strong rules.
-- The final top-50 verification was MINOR only: the reasoning label
-  "ranking-evaluation rigor (NDCG/MRR/A-B)" was softened to
-  "ranking-evaluation work" for 2 candidates whose profiles don't name those
-  metrics, and the coverage tie-break was added. Final state: zero
-  disqualifiers, zero hallucinations, zero impossible/dormant profiles in the
-  top-100.
-
-## How to run
-
-One-time precompute (unconstrained; teacher needs a GPU, ~8.4 min on RTX 4050):
-
-```
-python run_step35.py --candidates ..\..\candidates.jsonl --out-dir ..\..\artifacts_full
-python precompute_teacher.py
-python train_student.py
+```bash
+python rank.py --candidates ./candidates.jsonl --out ./submission.csv
+python validate_submission.py --submission ./submission.csv --candidates ./candidates.jsonl
 ```
 
-(`rank.py` from versions\v3 must have produced
-`features_refined_v3.parquet` / `scores_step35_v4.parquet`, and this
-version's `rescore.py` produces `features_v4.parquet`, before the first
-`rank.py` run here.)
+CPU only, no network, ~3.6 s wall, ~0.34 GB peak RAM on the 100K pool — well inside
+the 5 min / 16 GB / 5 GB budget (spec §3). Telemetry is written to `rank_telemetry.json`
+on every run.
 
-Constrained rank step (CPU only, ~2 s — writes `submission.csv` and
-`rank_telemetry.json` in THIS directory):
+## Repository layout
 
+| Path | Role |
+|---|---|
+| `rank.py` | **the constrained ranking step** (CPU-only by construction) |
+| `precompute.py` | offline orchestrator (5 stages); coverage-aware / incremental |
+| `run_step35.py`, `features.py` | stage 1 — bi-encoder facet embeddings + BM25 + structured features |
+| `build_rule_features.py` | stage 2 — JD-rule evidence / integrity / assessment features |
+| `precompute_teacher.py` | stage 3 — cross-encoder teacher (GPU) + signal features |
+| `train_student.py` | stage 4 — tuned LightGBM LambdaMART student |
+| `build_final_features.py` | stage 5 — full-profile-audit flags + blend |
+| `validate_submission.py` | offline pre-flight validator (mirrors Stage-1 checks) |
+| `app.py` | Gradio sandbox (HuggingFace Space / Docker SERVE mode) |
+| `tests/` | challenge-oriented pytest suite (contract + traps + determinism) |
+| `artifacts_full/` | the **~17 MB** the rank step loads (parquets / model / json) |
+| `Dockerfile`, `entrypoint.sh` | multi-mode image: `RANK` / `PRECOMPUTE` / `SERVE` |
+| `submission_metadata.yaml` | portal-metadata mirror (spec §10.2) — fill before submitting |
+| `docs/` | `RESULTS.md` (telemetry) + `audit_report.md` (the 5-round audit loop) |
+
+## Why `candidates.jsonl` and `*.npy` embeddings are **not** in this repository — and how it still runs on a new dataset
+
+This is deliberate, and the code is built to handle a brand-new candidate set.
+
+1. **`candidates.jsonl` (~487 MB) is organiser-provided input, not our code.** It is
+   not ours to redistribute and exceeds GitHub's file limit. Mount/point to it at run
+   time (`--candidates`, or `-v` for Docker).
+2. **The bi-encoder embeddings (`artifacts_full/*.npy`, ~620 MB) are *derived*, not
+   source.** They are fully regenerable from `candidates.jsonl` by `run_step35.py`, so
+   we ship **the script, not the blob** (spec §10.3 explicitly allows "a script that
+   produces them"). Only `run_step35.py` ever reads the `.npy`; nothing downstream does.
+3. **What we *do* commit is the 17 MB the constrained rank step actually needs:**
+   `features.parquet`, `features_refined_v3.parquet`, `features_v4.parquet`,
+   `signals_features.parquet`, `model_v3.txt`, `feature_cols_v2.json`. That keeps the
+   graded ranking step fully reproducible with no large download.
+
+### Running on a NEW candidates dataset (the `candidate_id`-vs-parquet check)
+
+`rank.py` checks every `candidate_id` in the supplied `candidates.jsonl` against the
+ids already covered by `artifacts_full/features.parquet`:
+
+- **Ids already covered** → ranked directly. On the official pool this is *all* of them,
+  so the step is byte-identical to development.
+- **Ids missing** (organisers supply new candidates) → `rank.py` prints a clear
+  instruction and ranks the covered subset (or aborts under `--strict-coverage`). To
+  fill the gap, run the **unconstrained** precompute, which embeds **only the missing
+  candidates** and merges them in:
+
+  ```bash
+  python precompute.py --candidates ./candidates.jsonl   # embeds ONLY new ids, merges features.parquet
+  python rank.py       --candidates ./candidates.jsonl --out ./submission.csv
+  ```
+
+  `precompute.py` diffs the ids first: if everything is already covered it is a **no-op**;
+  if some are new it runs the single GPU-bound stage (bi-encoder embeddings) for just
+  those ids and then re-derives the cheap CPU stages over the full pool so every table
+  stays consistent. The trained LightGBM student generalises to the new candidates — no
+  retraining required for the embeddings to be usable. This is why "precompute only the
+  new candidates" is exactly what happens, and the constrained `rank.py` never embeds.
+
+## GPU / CPU split — how we comply
+
+- **GPU touches only precompute** (`run_step35.py` bi-encoder, `precompute_teacher.py`
+  cross-encoder). Both print the device they load on; `precompute.py` prints
+  `torch.cuda.is_available()` up front. The chain also runs CPU-only (slower).
+- **The ranking step is CPU-only by construction.** `rank.py` imports only
+  numpy/pandas/pyarrow/orjson/psutil/lightgbm — `torch`/`sentence-transformers` are
+  never imported, are absent from `requirements-rank.txt`, and are not installed in the
+  rank venv. There is no code path that could reach a GPU or the network.
+  (`tests/test_rank_smoke.py` enforces this statically.)
+
+See `docs/RESULTS.md` for measured precompute timings (≈20 min on an RTX 4050,
+≈5–6 h CPU-only; one-time, skippable with the shipped artifacts).
+
+## Tests
+
+```bash
+pip install pytest
+set RANK_VERSION=5            # Windows (RANK_VERSION=5 on bash); gates version-specific traps
+pytest -q                    # full suite (runs rank.py end-to-end — needs artifacts_full/ + candidates.jsonl)
+pytest -q -m "not slow"      # fast: contract + trap + CPU-only-import guards
 ```
-python rank.py
+
+The suite encodes the challenge rules: the Stage-1 submission contract, a CPU-only/offline
+import guard, run determinism ("100/100 identical"), and trap guards (no YoE-inflation
+honeypot, CV-primary disqualifier, dormant+unresponsive, or certification anachronism in
+the top-100). Trap tests are gated on `RANK_VERSION` so they document which audit round
+closed each hole.
+
+## Docker
+
+```bash
+# Constrained ranking step (CPU, minimal) — the Stage-3 reproduction
+docker build -t redrob:rank --build-arg ENV_MODE=RANK .
+docker run --rm -v "$PWD/candidates.jsonl:/app/candidates.jsonl" \
+                -v "$PWD/out:/app/out" -e OUT=/app/out/submission.csv redrob:rank
+
+# Gradio sandbox
+docker build -t redrob:serve --build-arg ENV_MODE=SERVE .
+docker run --rm -p 7860:7860 redrob:serve        # http://localhost:7860
 ```
 
-Validate before submitting:
+## Sandbox
 
-```
-python validate_submission.py --submission submission.csv
-```
+`app.py` is a CPU-only Gradio demo: upload ≤100 candidate profiles (JSON array or JSONL
+matching `candidate_schema.json`) and download the ranked CSV; the bundled
+`sample_candidates.json` is a one-click demo. Deployed as a HuggingFace Space (link in
+`submission_metadata.yaml`).
 
-If the repo root is elsewhere, set `RANKER_ROOT` to the directory containing
-`candidates.jsonl` and `artifacts_full\`.
+## How we got here — iteration log (v1 → v5)
 
-## Telemetry
+The ranking logic was built by a disciplined **rank → audit → base-rate-verify → encode →
+re-rank** loop (full record in `docs/audit_report.md`); each step below is a real commit:
 
-Per-stage wall / CPU / RSS / peak-RAM and artifact disk footprint are printed
-on every run and recorded in `rank_telemetry.json` (results summarized in
-`telemetry.json` / `RESULTS.md` after the run): reference run = 2.0 s wall
-(0.7% of budget), 0.40 GB peak RAM (2.5%), 16.5 MB artifacts (0.3% of 5 GB).
+- **v1 — baseline composite.** Six-facet bi-encoder + BM25 hybrid with structured damps
+  and a binary honeypot gate. A top-30 audit found 13/30 weak or red-flagged (blurry
+  cosine, a CV-primary disqualifier at rank 10, a plain-language strong-fit buried at 91).
+- **v2 — career-evidence layer + continuous integrity ladder.** Ownership×context×recency
+  evidence from career descriptions (summaries excluded); the binary gate becomes a
+  continuous integrity score; CV-primary damp, hopper damp, YoE-vs-history honeypot
+  threshold. The stated-YoE honeypot falls to ~99,952.
+- **v3 — evidence-gated skill assessments.** Proctored assessment scores as a gated
+  "validated potential" signal (full credit only at evidence coverage ≥ 0.25), stopping
+  single-test profiles from leaping ~200 ranks.
+- **v4 — teacher → student distillation + full-profile audit.** A cross-encoder teacher
+  (bge-reranker-v2-m3) labels a shortlist; labels are integrity/anti-stuffer gated and
+  distilled into a tuned LightGBM LambdaMART student, blended at α=0.2 (rules dominate).
+  Base-rate-verified audit rules added: dormant×0.5, anachronism×0.30, soft penalties for
+  pervasive generator noise. **Rare patterns → strong rules; pervasive → soft penalties.**
+- **v5-final — submission package.** The v4 method packaged per spec §10.3: one precompute
+  orchestrator, one ranking command, the validator, `submission_metadata.yaml`, and the
+  coverage-aware new-dataset handling above. Final state: zero disqualifiers / zero
+  hallucinations / zero dormant profiles in the top-100; reproduction == development.
+
+### v6 (experimental — intentionally not in this submission)
+
+A later **JD-decoupled re-architecture** explored splitting the pipeline into a
+JD-independent candidate side (`embed_candidates.py` → vectors + intrinsic features) and a
+separately compiled JD profile (`jd_profile.yaml` → `jd_compile.py`), computing all
+JD-dependent features live in `rank.py` and dropping BM25. It serves a *different* purpose
+(fast re-targeting to a new JD without re-embedding candidates) and its artifacts are
+incomplete, so it is **kept out of this submission line**; v5-final is the validated,
+shipped ranker. The exploration is noted here for transparency about the iteration.
