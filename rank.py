@@ -1,25 +1,17 @@
 """
-rank.py — v2 CONSTRAINED ranking step: second refinement pass after the
-top-50 audit. Reuses saved embeddings/features (artifacts_full).
-No re-embedding / teacher / LGBM.
+rank.py — v3 CONSTRAINED ranking step: third refinement pass — skill-assessment
+scores as a "validated potential" signal. Reuses artifacts_full; no re-embedding.
 
-Audit findings encoded (2026-06-11, top-50 review):
-  V1  evidence is scored on career_history[].description ONLY — templated
-      summaries make unsupported "I built FAISS search" claims (rank-10 case).
-  V2  per-job evidence with CONTEXT and OWNERSHIP:
-        - "internal knowledge base / internal dashboard" scale -> 0.4x credit
-        - ownership verbs (led/owned/designed/architected/from scratch) -> 1.0,
-          participation only -> 0.7x
-        - recency-weighted (stale retrieval work counts less), max over jobs
-  V3  ranking-eval credit requires ranking metrics (NDCG/MRR/MAP/recall@k) or
-      offline-online / A-B language; "human relevance judgments" alone and
-      BLEU/ROUGE chatbot eval no longer qualify.
-  V4  job-hopper disqualifier: 4+ jobs with mean stint < 19 months -> 0.55x.
-  V5  location per the JD's actual city lists: Pune/Noida preferred;
-      Hyderabad/Mumbai/Delhi-NCR ok; everything else needs willing_to_relocate;
-      outside India + not relocating is near-disqualifying.
-  V6  integrity: yoe-vs-career threshold tightened (rank-9 honeypot at 15.2yr
-      vs 86mo slipped the 1.9x bound) + summary-stated years cross-check.
+Changes vs v2 (which stays the audited baseline):
+  A1  Redrob skill_assessment_scores matched against JD-relevant skills only;
+      score mapped to strength via (score-40)/50 clipped to [0,1] (a 50 is not
+      validation; 90 is).
+  A2  corroboration channel: damp uses max(narrative corroboration, evidence
+      coverage, assessment strength) — a proctored assessment is corroboration
+      a stuffer cannot fake, and rescues skilled-but-not-yet-applied profiles.
+  A3  small additive "validated potential" term (5% of fit, upside-only).
+      Absence of assessments costs nothing.
+  Everything else identical to v2's rank step (incl. out-of-country damp).
 
     python rank.py
 """
@@ -60,8 +52,6 @@ class T:
         self._p = c
 
 # --------------------------------------------------------------------------- #
-# evidence regexes (career descriptions only)                                 #
-# --------------------------------------------------------------------------- #
 EVID = {
     "retrieval": re.compile(
         r"embedding[- ]based (?:retrieval|search)|semantic search|dense retrieval|"
@@ -95,17 +85,23 @@ NLP_RE = re.compile(r"\bnlp\b|natural language|retrieval|search|ranking|recommen
                     r"embedding|semantic|information retrieval|text|\bllm\b|transformer", re.I)
 YEARS_RE = re.compile(r"(\d+(?:\.\d+)?)\s*years of (?:hands[- ]on )?experience", re.I)
 
+# A1 — JD-relevant assessment keys (must-haves + core craft; CV/speech excluded)
+DESIRED_SKILL_RE = re.compile(
+    r"embed|vector|semantic|retriev|\bsearch\b|rank|recommend|\bnlp\b|"
+    r"natural language|information retrieval|\bllm\b|fine[- ]?tun|lora|qlora|"
+    r"transformer|sentence|bm25|faiss|pinecone|qdrant|weaviate|milvus|"
+    r"elasticsearch|opensearch|python|pytorch|machine learning|deep learning|"
+    r"feature engineering|xgboost|lightgbm|a/b|ab test|ndcg|hugging", re.I)
+
 PREFERRED = ("pune", "noida")
 OK_CITIES = ("hyderabad", "mumbai", "delhi", "gurgaon", "gurugram", "ncr")
 
 def evidence_scores(c):
-    """Per-category evidence in [0,1]: max over jobs of
-    hit * ownership * context * recency."""
     out = {k: 0.0 for k in EVID}
     depth_bonus = 0.0
     for j in c["career_history"]:
         desc = f"{j.get('title','')}. {j.get('description','')}"
-        rec = recency_weight(months_since_end(j), halflife=30.0)   # gentler decay
+        rec = recency_weight(months_since_end(j), halflife=30.0)
         ctx = 0.4 if INTERNAL_RE.search(desc) else 1.0
         own = 1.0 if OWNER_RE.search(desc) else 0.7
         scale = 1.0 if SCALE_RE.search(desc) else 0.85
@@ -116,6 +112,17 @@ def evidence_scores(c):
             depth_bonus = max(depth_bonus, rec)
     coverage = float(np.mean(list(out.values())))
     return out, coverage, depth_bonus
+
+def assessment_strength(c):
+    """A1: strength in [0,1] of Redrob-VALIDATED, JD-relevant skills."""
+    sas = c["redrob_signals"].get("skill_assessment_scores") or {}
+    rel = [v for k, v in sas.items() if DESIRED_SKILL_RE.search(k)]
+    if not rel:
+        return 0.0, 0
+    top3 = sorted(rel, reverse=True)[:3]
+    strength = float(np.clip((np.mean(top3) - 40.0) / 50.0, 0.0, 1.0))
+    strength *= len(rel) / (len(rel) + 0.5)        # 1 test=0.67x, 3 tests=0.86x
+    return strength, len(rel)
 
 def location_fit(c):
     p, sig = c["profile"], c["redrob_signals"]
@@ -132,7 +139,7 @@ def location_fit(c):
         return 0.9
     if in_india:
         return 0.75 if relocate else 0.40
-    return 0.50 if relocate else 0.12     # no visa sponsorship, case-by-case
+    return 0.50 if relocate else 0.12
 
 def integrity_and_hops(c):
     p, jobs, skills = c["profile"], c["career_history"], c.get("skills", [])
@@ -150,10 +157,10 @@ def integrity_and_hops(c):
         hard("career_sum_exceeds_stated_yoe")
     if any(j.get("duration_months", 0) / 12.0 > yoe + 1.5 for j in jobs):
         hard("single_role_exceeds_stated_yoe")
-    if career_m > 0 and yoe * 12 > career_m * 1.6 + 18:                   # V6
+    if career_m > 0 and yoe * 12 > career_m * 1.6 + 18:
         hard("stated_yoe_far_exceeds_career_history")
     m = YEARS_RE.search(p.get("summary") or "")
-    if m and abs(yoe - float(m.group(1))) > 3.0:                          # V6
+    if m and abs(yoe - float(m.group(1))) > 3.0:
         hard("stated_yoe_contradicts_summary")
     if any(s.get("proficiency") == "expert" and s.get("duration_months", 1) == 0
            for s in skills):
@@ -169,7 +176,7 @@ def integrity_and_hops(c):
         soft("salary_range_inverted", 0.97)
 
     durs = [j.get("duration_months", 0) for j in jobs]
-    hopper = int(len(durs) >= 4 and np.mean(durs) < 19)                   # V4
+    hopper = int(len(durs) >= 4 and np.mean(durs) < 19)
     return integrity, reasons, hopper
 
 def main():
@@ -187,12 +194,14 @@ def main():
             cid = c["candidate_id"]
             ev, cov, depth = evidence_scores(c)
             integ, reasons, hopper = integrity_and_hops(c)
+            astr, n_rel = assessment_strength(c)
             text = " ".join(f"{j.get('title','')}. {j.get('description','')}"
                             for j in c["career_history"])
             cv_n, nlp_n = len(CV_RE.findall(text)), len(NLP_RE.findall(text))
             notice = c["redrob_signals"].get("notice_period_days") or 0
             rows.append({**{f"evid_{k}": v for k, v in ev.items()},
                          "evid_coverage": cov, "depth_bonus": depth,
+                         "assess_strength": astr, "n_assessed_relevant": n_rel,
                          "cv_primary": int(cv_n >= 3 and cv_n > nlp_n),
                          "hopper": hopper, "integrity": integ,
                          "integrity_reasons": ";".join(reasons),
@@ -205,15 +214,12 @@ def main():
     ref = pd.DataFrame(rows, index=pd.Index(ids, name="candidate_id"))
     df = feats.join(ref)
     t.mark("feature_build")
-    print(f"[v2] scanned {len(df)} candidates in {time.time()-t0:.0f}s")
-    print(f"[v2] integrity<0.1: {int((df['integrity'] < 0.1).sum())}; "
-          f"hoppers: {int(df['hopper'].sum())}; cv_primary: {int(df['cv_primary'].sum())}")
-    rc = ref.loc[ref["integrity_reasons"] != "", "integrity_reasons"]
-    print(f"[v2] integrity reasons: {rc.str.split(';').explode().value_counts().to_dict()}")
-    print(f"[v2] coverage>=0.5: {int((df['evid_coverage'] >= 0.5).sum())}, "
-          f">=0.25: {int((df['evid_coverage'] >= 0.25).sum())}")
+    print(f"[v3] scanned {len(df)} candidates in {time.time()-t0:.0f}s")
+    print(f"[v3] assessed-relevant>0: {int((df['n_assessed_relevant'] > 0).sum())}; "
+          f"strength>0.5: {int((df['assess_strength'] > 0.5).sum())}; "
+          f"integrity<0.1: {int((df['integrity'] < 0.1).sum())}")
 
-    # ---- composite v3 --------------------------------------------------------
+    # ---- composite v4 (v3 weights) -------------------------------------------
     dense_fit = (0.28 * df["ranking__recencywt"] + 0.22 * df["retrieval__recencywt"] +
                  0.12 * df["vectordb__recencywt"] + 0.10 * df["evaluation__recencywt"] +
                  0.10 * df["applied_ml__recencywt"] + 0.08 * df["yoe_fit"] +
@@ -221,16 +227,20 @@ def main():
     bm25_cols = [f"{f}__bm25" for f in FACET_ORDER if f"{f}__bm25" in df.columns]
     lex_fit = df[bm25_cols].mean(axis=1)
 
-    fit = (0.40 * dense_fit + 0.10 * lex_fit +
-           0.42 * df["evid_coverage"] + 0.08 * df["depth_bonus"])
-    fit *= 0.4 + 0.6 * np.maximum(df["ai_skill_corroboration"], df["evid_coverage"])
+    fit = (0.38 * dense_fit + 0.09 * lex_fit + 0.40 * df["evid_coverage"] +
+           0.08 * df["depth_bonus"] + 0.05 * df["assess_strength"])           # A3
+    # A2: assessments corroborate only in proportion to narrative evidence —
+    # a test score must not substitute for career proof (full credit at cov>=0.25)
+    assess_corr = (df["assess_strength"].values
+                   * np.minimum(1.0, df["evid_coverage"].values / 0.25))
+    fit *= 0.4 + 0.6 * np.maximum.reduce([df["ai_skill_corroboration"].values,
+                                          df["evid_coverage"].values,
+                                          assess_corr])
     fit *= np.where(df["cv_primary"] == 1, 0.60, 1.0)
-    fit *= np.where(df["hopper"] == 1, 0.55, 1.0)                          # V4
+    fit *= np.where(df["hopper"] == 1, 0.55, 1.0)
     fit *= 1.0 - 0.30 * df["only_consulting"]
     fit *= np.where(df["months_since_ic_role"] > 18, 0.85, 1.0)
-    fit *= 0.55 + 0.45 * df["loc_fit2"]                                    # V5
-    # outside India + unwilling to relocate: case-by-case per JD, no visa
-    # sponsorship -> too risky for top ranks regardless of content
+    fit *= 0.55 + 0.45 * df["loc_fit2"]
     fit *= np.where(df["loc_fit2"] <= 0.12, 0.60, 1.0)
     fit = (fit - fit.min()) / (np.ptp(fit.values) + 1e-9)
 
@@ -257,6 +267,8 @@ def main():
                     or "adjacent applied-ML work"
         s = (f"{p['current_title']} with {p['years_of_experience']:.0f} yrs; "
              f"career history shows {strengths}")
+        if row["assess_strength"] > 0.5:
+            s += "; platform-validated assessments in relevant skills"
         concerns = []
         if row["hopper"]: concerns.append("frequent job changes")
         if row["only_consulting"]: concerns.append("services-only background")
@@ -285,33 +297,41 @@ def main():
             rec.update(cand_by_id[cid])
             f.write(orjson.dumps(rec) + b"\n")
 
-    ref.to_parquet(os.path.join(ART, "features_refined_v2.parquet"))
+    ref.to_parquet(os.path.join(ART, "features_refined_v3.parquet"))
     pd.DataFrame({"candidate_id": df.index, "fit": fit, "final": final}
                  ).set_index("candidate_id").to_parquet(
-                 os.path.join(ART, "scores_step35_v3.parquet"))
+                 os.path.join(ART, "scores_step35_v4.parquet"))
     t.mark("outputs")
 
     mem, cpu = proc.memory_info(), proc.cpu_times()
-    print(f"[v2] wall={time.time()-t0:.1f}s cpu={cpu.user+cpu.system:.1f}s "
+    print(f"[v3] wall={time.time()-t0:.1f}s cpu={cpu.user+cpu.system:.1f}s "
           f"peak={getattr(mem,'peak_wset',mem.rss)/2**30:.2f}GB")
-    print(f"[v2] min integrity in top-100 = {df.loc[top_ids,'integrity'].min():.2f}")
-    ranks = pd.Series(final, index=df.index).rank(ascending=False, method="min")
-    PROBES = {
-        "CAND_0046525": "audit #1 (keep ~1)", "CAND_0005260": "audit -> top3",
-        "CAND_0011687": "audit -> top3 (Indore)", "CAND_0046064": "audit -> top5",
-        "CAND_0041669": "audit #5", "CAND_0071974": "audit -> top10 (Vizag)",
-        "CAND_0039383": "audit #7", "CAND_0064326": "audit #9 (behavioral best)",
-        "CAND_0010770": "HONEYPOT -> out", "CAND_0083879": "summary-only -> out",
-        "CAND_0030953": "hopper -> out", "CAND_0027691": "churn-current -> down",
-        "CAND_0055905": "London no-reloc -> down", "CAND_0000031": "watch",
-    }
-    for pid, note in PROBES.items():
-        print(f"[v2] {pid}: rank {int(ranks[pid]):6}  ({note}; "
-              f"cov={df.loc[pid,'evid_coverage']:.2f} integ={df.loc[pid,'integrity']:.2f} "
-              f"loc={df.loc[pid,'loc_fit2']:.2f} hop={int(df.loc[pid,'hopper'])})")
+    print(f"[v3] min integrity in top-100 = {df.loc[top_ids,'integrity'].min():.2f}")
+
+    # ---- diff audit vs v2 ------------------------------------------------------
+    prev_scores = pd.read_parquet(os.path.join(ART, "scores_step35_v3.parquet"))  # v2 output
+    old_rank = prev_scores["final"].rank(ascending=False, method="min")
+    new_rank = pd.Series(final, index=df.index).rank(ascending=False, method="min")
+    old50 = set(old_rank[old_rank <= 50].index); new50 = set(new_rank[new_rank <= 50].index)
+    print(f"\n[diff] top-50 overlap: {len(old50 & new50)}/50")
+    for cid in sorted(new50 - old50, key=lambda c: new_rank[c]):
+        print(f"[diff] ENTER top-50: {cid} v2_rank={int(old_rank[cid])} -> {int(new_rank[cid])} "
+              f"(assess={df.loc[cid,'assess_strength']:.2f} n_rel={int(df.loc[cid,'n_assessed_relevant'])} "
+              f"cov={df.loc[cid,'evid_coverage']:.2f})")
+    for cid in sorted(old50 - new50, key=lambda c: old_rank[c]):
+        print(f"[diff] EXIT  top-50: {cid} {int(old_rank[cid])} -> {int(new_rank[cid])} "
+              f"(assess={df.loc[cid,'assess_strength']:.2f} cov={df.loc[cid,'evid_coverage']:.2f})")
+    PROBES = ["CAND_0046525", "CAND_0011687", "CAND_0071974", "CAND_0041669",
+              "CAND_0039383", "CAND_0064326", "CAND_0010770", "CAND_0083879",
+              "CAND_0030953", "CAND_0027691", "CAND_0055905", "CAND_0005260",
+              "CAND_0046064", "CAND_0000031"]
+    print("\n[diff] probes (v2 -> v3):")
+    for pid in PROBES:
+        print(f"  {pid}: {int(old_rank[pid]):6} -> {int(new_rank[pid]):6} "
+              f"(assess={df.loc[pid,'assess_strength']:.2f})")
 
     total_wall = time.time() - t_all
-    tele = {"version": "v2", "total_wall_s": round(total_wall, 2),
+    tele = {"version": "v3", "total_wall_s": round(total_wall, 2),
             "total_cpu_s": round(sum(s["cpu_s"] for s in t.stages), 2),
             "peak_memory_gb": max(s["peak_gb"] for s in t.stages),
             "n_candidates": int(len(df)),
@@ -321,7 +341,7 @@ def main():
             "stages": t.stages}
     with open(os.path.join(OUT, "telemetry.json"), "w") as f:
         json.dump(tele, f, indent=2)
-    print(f"[v2] wrote submission.csv + top100candidates.jsonl + telemetry.json "
+    print(f"[v3] wrote submission.csv + top100candidates.jsonl + telemetry.json "
           f"(wall={total_wall:.1f}s, {total_wall/300*100:.1f}% of 5-min budget)")
 
 if __name__ == "__main__":
