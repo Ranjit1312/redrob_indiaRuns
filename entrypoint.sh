@@ -1,18 +1,43 @@
 #!/usr/bin/env sh
+# RedRob v7 container entrypoint. Mode is selected by $ENV_MODE (baked at build
+# time, overridable at run time with `-e ENV_MODE=...`).
 set -e
+
 : "${ENV_MODE:=RANK}"
-: "${CANDIDATES:=candidates.jsonl}"
+: "${CANDIDATES:=candidates.jsonl}"   # bind-mounted at run time
 : "${OUT:=submission.csv}"
-: "${COVERAGE:=skip}"     # RANK mode default: skip the candidate_id coverage scan.
-                          # The mounted candidates.jsonl IS the precomputed pool, so the
-                          # scan is a no-op — and a full pass over a bind-mounted ~487MB
-                          # file costs minutes. Set COVERAGE=check to force it (new dataset).
+export RANKER_ROOT="${RANKER_ROOT:-/app}"
+
+echo "[entrypoint] ENV_MODE=$ENV_MODE RANKER_ROOT=$RANKER_ROOT CANDIDATES=$CANDIDATES"
+
 case "$ENV_MODE" in
-  PRECOMPUTE) exec python precompute.py --candidates "$CANDIDATES" ;;   # coverage-aware / incremental
-  SERVE)      exec python app.py ;;                                     # Gradio demo on :7860
-  *)          COV=""; [ "$COVERAGE" = "skip" ] && COV="--no-coverage-check"
-              python rank.py --candidates "$CANDIDATES" --out "$OUT" $COV
-              # validate format only (drop --candidates: the id-exists scan is a 3rd full
-              # pass over the big file and is redundant — ids come from the precomputed pool)
-              exec python validate_submission.py --submission "$OUT" ;;
+
+  PRECOMPUTE)
+    # Offline GPU build of artifacts_v7/. Each line prints its own wall/device
+    # timing; redirect stdout to a log to capture telemetry for the README.
+    #   step 1 re-runs only when the candidate POOL changes
+    #   steps 2-4 re-run when the JD changes (edit jd/jd_profile.yaml first)
+    echo "[precompute] 1/4 embed_candidates.py  (GPU, JD-independent embeddings)"
+    python embed_candidates.py --candidates "$CANDIDATES"
+    echo "[precompute] 2/4 jd_compile.py        (JD seam -> jd_vectors + bm25_facets)"
+    python jd_compile.py
+    echo "[precompute] 3/4 rank.py --features-only  (live feature pass for training)"
+    python rank.py --candidates "$CANDIDATES" --features-only
+    echo "[precompute] 4/4 train.py             (cross-encoder teacher -> LightGBM student)"
+    python train.py
+    echo "[precompute] DONE -> $RANKER_ROOT/artifacts_v7/ (embeddings + model.txt + feature_cols.json)"
+    ;;
+
+  SERVE)
+    # HuggingFace Space sandbox: Gradio UI over the constrained rank step.
+    exec python app.py
+    ;;
+
+  *)  # RANK — the judged path: CPU only, <5 min, <=16 GB, offline.
+    python rank.py --candidates "$CANDIDATES" --out "$OUT"
+    # Pre-flight the output against the Stage-1 auto-validator checks. Drop
+    # --candidates here: the id-exists scan is a redundant full pass over the
+    # big mounted file (ids already come from the precomputed pool).
+    exec python validate_submission.py --submission "$OUT"
+    ;;
 esac

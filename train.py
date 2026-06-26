@@ -181,15 +181,19 @@ def main():
           f"({len(todo)/max(1e-9, time.time()-t1):.1f}/s)")
 
     # gate the labels: anti-stuffer corroboration x integrity.
-    # The stuffer-gate factor is the SAME max-corroboration term compute_rules
-    # applies inside `fit`; the integrity multiplier is taken straight from the
-    # rules engine (rr.integrity) — no integrity ladder re-derived here.
+    # Mirrors the rank composite's evidence/claim/assessment gating, collapsed
+    # into one "is this actually corroborated?" multiplier: floor + span * max(
+    # ai_skill_corroboration, evidence_coverage, coverage-gated assessment). The
+    # constants are the SAME reworked method keys rank.py uses — evidence_gate
+    # (floor/span) and assessment_bonus.full_credit_cov — so there is no separate
+    # stuffer_gate config to drift. Integrity is taken straight from the rules
+    # engine (rr.integrity); no integrity ladder is re-derived here.
     sub = F.loc[todo]
-    SG = method.stuffer_gate
+    EG = method.evidence_gate
+    cov0 = method.assessment_bonus["full_credit_cov"]
     assess_corr = (sub["assess_strength"].values
-                   * np.minimum(1.0, sub["evid_coverage"].values
-                                / SG["assess_full_credit_cov"]))
-    stuffer_gate = SG["floor"] + SG["span"] * np.maximum.reduce(
+                   * np.minimum(1.0, sub["evid_coverage"].values / cov0))
+    stuffer_gate = EG["floor"] + EG["span"] * np.maximum.reduce(
         [sub["ai_skill_corroboration"].values,
          sub["evid_coverage"].values, assess_corr])
     pseudo = ce_sig * stuffer_gate * integrity.loc[todo].values

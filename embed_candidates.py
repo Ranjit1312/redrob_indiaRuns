@@ -50,57 +50,106 @@ def summary_text(c):
     return f"{p.get('headline', '')}. {p.get('summary') or ''}"
 
 
+def _scan_shard(task):
+    """Worker: parse one [start, end) byte range of the candidates file and
+    return compact payloads. Raw candidate dicts never cross the process
+    boundary — extract_intrinsic runs IN-WORKER and only its (small) DataFrame
+    comes back. Byte boundaries are realigned to whole lines so every candidate
+    record is processed exactly once regardless of where the split byte lands.
+
+    Returns (job_texts, summaries, evid_rows, chunk_counts, intrinsic_df), all
+    in file order; the parent concatenates shards in task order (== file order).
+    """
+    path, start, end = task
+    import orjson
+    job_texts, summaries, evid_rows, chunk_counts, records = [], [], [], [], []
+    with open(path, "rb") as f:
+        if start:
+            # Realign to a line boundary. If byte[start-1] is '\n', `start` is a
+            # line beginning -> keep it; else we're mid-line -> drop the partial
+            # (the previous shard reads past its end to finish that line).
+            f.seek(start - 1)
+            if f.read(1) != b"\n":
+                f.readline()
+        while f.tell() < end:           # own every line whose START is < end
+            line = f.readline()
+            if not line:
+                break
+            if not line.strip():
+                continue
+            c = orjson.loads(line)
+            jobs = c.get("career_history") or []
+            chunks = [career_text(j) for j in jobs]
+            metas = [{"t": j.get("title") or "", "c": j.get("company") or "",
+                      "i": j.get("industry") or "", "d": j.get("duration_months") or 0,
+                      "e": j.get("end_date") or "", "cur": bool(j.get("is_current"))}
+                     for j in jobs]
+            job_texts.extend(chunks)
+            chunk_counts.append(len(chunks))
+            summaries.append(summary_text(c))
+            evid_rows.append({"candidate_id": c["candidate_id"],
+                              "headline_summary": summary_text(c),
+                              "jobs_text": SEP.join(chunks),
+                              "jobs_meta": orjson.dumps(metas).decode()})
+            records.append(c)
+    return job_texts, summaries, evid_rows, chunk_counts, extract_intrinsic(records)
+
+
 def main():
     ap = argparse.ArgumentParser()
     ap.add_argument("--candidates", default=os.path.join(BASE, "candidates.jsonl"))
     ap.add_argument("--batch-size", type=int, default=None)
+    ap.add_argument("--workers", type=int, default=None,
+                    help="parallel JSONL-scan processes (default: os.cpu_count(); "
+                         "use 1 to force the serial path)")
     ap.add_argument("--method", default=METHOD_DEFAULT)
     ap.add_argument("--jd", default=JD_DEFAULT)
     args = ap.parse_args()
     os.makedirs(ART, exist_ok=True)
     t0 = time.time()
-    import orjson
 
     # model id from the JD-stable method config
     _, method = rprofile.load(args.jd, args.method)
     EMBED_MODEL = method.models["embedder"]["name"]
     BATCH = args.batch_size or int(method.models["embedder"].get("batch_size", 256))
 
-    # ---- 1. single streaming scan -----------------------------------------
-    # Collect the raw records for extract_intrinsic (single source of intrinsic
-    # logic) AND the embedding/evidence-text payloads in one pass.
-    job_offsets, all_job_texts, all_summaries = [], [], []
-    evid_rows, records = [], []
-    with open(args.candidates, "rb") as f:
-        for line in f:
-            if not line.strip():
-                continue
-            c = orjson.loads(line)
-            cid = c["candidate_id"]
-            jobs = c.get("career_history") or []
+    # ---- 1. parallel streaming scan ---------------------------------------
+    # The scan (orjson parse + per-record intrinsic extraction + evidence-text
+    # build) is the single-threaded bottleneck of the candidate pass, so split
+    # the file into ~equal byte ranges and parse them across processes. Each
+    # worker runs extract_intrinsic on its own shard (the single source of
+    # intrinsic logic) and returns only compact results; the parent stitches
+    # them back IN FILE ORDER, so job_offsets / embeddings / intrinsic all stay
+    # aligned and the artifacts are byte-identical to the serial path.
+    file_size = os.path.getsize(args.candidates)
+    workers = max(1, args.workers or (os.cpu_count() or 1))
+    if workers > 1 and file_size > (8 << 20):
+        bounds = [file_size * i // workers for i in range(workers + 1)]
+        tasks = [(args.candidates, bounds[i], bounds[i + 1]) for i in range(workers)]
+        import multiprocessing as mp
+        with mp.Pool(workers) as pool:
+            shards = pool.map(_scan_shard, tasks)
+        print(f"[embed] scanned with {workers} workers")
+    else:
+        shards = [_scan_shard((args.candidates, 0, file_size))]
 
-            start = len(all_job_texts)
-            chunks, metas = [], []
-            for j in jobs:
-                chunks.append(career_text(j))
-                metas.append({"t": j.get("title") or "",
-                              "c": j.get("company") or "",
-                              "i": j.get("industry") or "",
-                              "d": j.get("duration_months") or 0,
-                              "e": j.get("end_date") or "",
-                              "cur": bool(j.get("is_current"))})
-            all_job_texts.extend(chunks)
-            job_offsets.append((start, len(all_job_texts)))
-            all_summaries.append(summary_text(c))
+    all_job_texts, all_summaries, evid_rows, chunk_counts, intr_parts = \
+        [], [], [], [], []
+    for jt, sm, ev, cc, idf in shards:
+        all_job_texts.extend(jt)
+        all_summaries.extend(sm)
+        evid_rows.extend(ev)
+        chunk_counts.extend(cc)
+        intr_parts.append(idf)
 
-            evid_rows.append({"candidate_id": cid,
-                              "headline_summary": summary_text(c),
-                              "jobs_text": SEP.join(chunks),
-                              "jobs_meta": orjson.dumps(metas).decode()})
-            records.append(c)
+    # rebuild per-candidate [start, end) job-chunk offsets from the chunk counts
+    counts = np.asarray(chunk_counts, dtype=np.int64)
+    ends = np.cumsum(counts)
+    starts = ends - counts
+    job_offsets = list(zip(starts.tolist(), ends.tolist()))
 
-    # ---- intrinsic facts via the single source -----------------------------
-    intr_df = extract_intrinsic(records)
+    # ---- intrinsic facts (concatenated shards, file order) ----------------
+    intr_df = pd.concat(intr_parts) if intr_parts else extract_intrinsic([])
     n = len(intr_df)
     print(f"[embed] scanned {n} candidates, {len(all_job_texts)} job chunks "
           f"({time.time()-t0:.0f}s)")

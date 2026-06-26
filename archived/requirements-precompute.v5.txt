@@ -1,6 +1,0 @@
--r requirements-rank.txt
-scikit-learn>=1.3
-rank-bm25>=0.2.2   # v1-v5 precompute; v6 dropped BM25
-sentence-transformers>=5
-torch>=2.12
-tqdm>=4.66

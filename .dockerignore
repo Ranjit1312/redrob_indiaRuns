@@ -1,5 +1,7 @@
-# Keep the image slim and the rank step CPU-only. The RANK image needs the
-# ~17 MB artifacts_full/*.parquet|*.txt|*.json (NOT excluded) + the app code.
+# Keep the image lean. NOTE (v7): unlike v5, the rank step DOES read the
+# artifacts_v7/*.npy embeddings (features.py builds the dense facet channel from
+# job_embeddings.npy @ jd_vectors.npy), so artifacts_v7/ is shipped IN FULL in the
+# RANK / SERVE images — do not exclude it.
 
 # Version control / planning
 .git
@@ -7,14 +9,17 @@
 .gitattributes
 .github
 
-# Iteration source history (code is promoted to repo root)
+# v5 implementation + its artifacts (archived; not used by any v7 image)
+archived/
 versions/
 
-# Large input + derived embeddings — candidates.jsonl is volume-mounted at run
-# time; the .npy embeddings are not read by the rank step.
+# Large mounted input — candidates.jsonl is bind-mounted at run time (RANK /
+# PRECOMPUTE); the SERVE image ranks the bundled demo pool instead.
 candidates.jsonl
-artifacts_full/*.npy
-artifacts_full/_incremental/
+top100candidates.jsonl
+
+# Stale / other-version artifact dirs (the live one is artifacts_v7/)
+artifacts_full/
 artifacts_v6/
 artifacts/
 artifacts_smoke/
@@ -31,9 +36,7 @@ tests/
 *.docx
 *.md
 report*.html
-rec*.txt
-docs_txt/
-d_tmp*
-f_tmp*
+docs/
+out/
+submission_assets/
 rank_telemetry.json
-top100candidates.jsonl

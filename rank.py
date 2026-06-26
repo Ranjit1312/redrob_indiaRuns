@@ -1,10 +1,16 @@
 """
 rank.py — v7 component 4: the constrained ranking step (CPU ONLY, <5 min).
 
-STRUCTURALLY CPU-only: imports numpy / pandas / pyarrow / orjson / psutil /
-lightgbm / pyyaml (transitively, via redrob_ranker) and nothing else — torch
-and sentence-transformers are never imported, so GPU use is impossible by
+STRUCTURALLY CPU-only: imports numpy / pandas / pyarrow / psutil / lightgbm /
+pyyaml (transitively, via redrob_ranker) and nothing else — torch and
+sentence-transformers are never imported, so GPU use is impossible by
 construction.
+
+ARTIFACT-ONLY: rank.py never opens the raw candidate file. Scoring uses the
+precomputed parquet/npy artifacts, and reasoning is sourced from the feature /
+intrinsic frames (the v4 decision — candidate facts live in parquet, not
+re-parsed from JSON). --candidates is accepted only to report the pool size in
+telemetry; it can be omitted.
 
 Unlike v6's monolith, v7 delegates to the pure core:
 
@@ -23,11 +29,12 @@ Artifacts (in <RANKER_ROOT or repo-root>/artifacts_v7/):
     jd_vectors.npy + jd_profile.yaml               (JD-compiled)
     model.txt + feature_cols.json                  (trained student)
 
-NOTE — BM25 simplification (v5->v6/v7): v5 carried a BM25 lexical channel at
-weight 0.09; v7 omits BM25 entirely (the evidence regexes carry a
-higher-precision lexical channel and a corpus IDF model is awkward to keep
-JD-decoupled). Its 0.09 weight is folded into evidence coverage (0.40 -> 0.49),
-recorded in jd/method_config.yaml fit_weights.
+NOTE — BM25 lexical channel: the v5 BM25 channel is preserved. The per-JD pass
+runs in jd_compile.py (rank_bm25 over the evidence docs) and is persisted to
+artifacts_v7/bm25_facets.parquet; features.py loads it and rules.py mixes
+lex_fit = mean(<id>__bm25) into the additive composite at additive_weights.lexical
+(0.09). Keeping rank_bm25 in the per-JD step means this CPU rank path never
+imports it — torch/sentence-transformers/rank_bm25 are all absent here.
 
     python rank.py --candidates ./candidates.jsonl --out ./submission.csv
     python rank.py --candidates ./candidates.jsonl --features-only   (for train.py)
@@ -95,7 +102,6 @@ def main():
                     help="path to method_config.yaml")
     args = ap.parse_args()
     t = T(); t_all = time.time()
-    import orjson
 
     # ---- 0. artifact footprint --------------------------------------------
     ARTIFACTS = ["job_embeddings.npy", "summary_embeddings.npy",
@@ -120,7 +126,7 @@ def main():
     t.mark("load_profile")
 
     # ---- 2-9. live feature build (features.py) ----------------------------
-    df = rfeatures.build_features(profile, method, art_dir=ART)
+    df = rfeatures.build_features_parallel(profile, method, art_dir=ART)
     idx = df.index
     N = len(idx)
     t.mark("build_features")
@@ -160,46 +166,43 @@ def main():
     top_ids, top_scores = idx.values[pos], final[pos]
     t.mark("argpartition_topk")
 
-    # ---- 13. stream candidates.jsonl for the top-k profiles ---------------
-    wanted, prof = set(top_ids), {}
-    with open(args.candidates, "rb") as f:
-        for line in f:
-            if not line.strip():
-                continue
-            c = orjson.loads(line)
-            if c["candidate_id"] in wanted:
-                prof[c["candidate_id"]] = c
-                if len(prof) == len(wanted):
-                    break
-    t.mark("stream_topk_profiles")
-
-    # ---- 14. grounded reasoning + write -----------------------------------
+    # ---- 13. grounded reasoning + write -----------------------------------
+    # rank.py never opens the raw candidate file: scoring is artifact-only, and
+    # reasoning is sourced entirely from the precomputed feature/intrinsic frames
+    # below (the v4 decision — facts live in parquet, not re-parsed from JSON).
     # EVID_LABEL is now sourced from the profile's evidence signals (their
     # human label), not a hardcoded dict — a JD swap re-labels reasoning too.
     EVID_LABEL = {s.id: s.label for s in profile.evidence_signals()}
     loc2_s = pd.Series(loc2, index=idx)
+    # Reasoning facts come from the precomputed intrinsic table (the single
+    # source of candidate facts) — NOT a re-parse of raw JSON. The feature frame
+    # already carries yoe / notice_days / remote_pref / dormant / hopper /
+    # assess_strength / evid_*; only these three aren't on it, so pull just them.
+    intr_reason = pd.read_parquet(
+        os.path.join(ART, "intrinsic.parquet"),
+        columns=["current_title", "open_to_work_flag", "recruiter_response_rate"])
 
     def reasoning_for(cid):
-        row, c = df.loc[cid], prof[cid]
-        p, s_ = c["profile"], c["redrob_signals"]
+        row, ir = df.loc[cid], intr_reason.loc[cid]
         named = sorted(((kk, row[f"evid_{kk}"]) for kk in EVID_LABEL),
                        key=lambda x: -x[1])
         strengths = ", ".join(EVID_LABEL[kk] for kk, v in named[:3] if v >= 0.4) \
                     or "adjacent applied-ML work"
-        out = (f"{p['current_title']} with {p['years_of_experience']:.0f} yrs; "
+        out = (f"{ir['current_title']} with {row['yoe']:.0f} yrs; "
                f"career history shows {strengths}")
         if row["assess_strength"] > 0.5:
             out += "; platform-validated assessments in relevant skills"
         cc = []
         if row["dormant"]: cc.append("dormant and unresponsive on platform")
         if row["hopper"]: cc.append("frequent job changes")
-        if not s_.get("open_to_work_flag"): cc.append("not flagged open-to-work")
+        if not ir["open_to_work_flag"]: cc.append("not flagged open-to-work")
         if row["remote_pref"]: cc.append("prefers remote vs hybrid role")
-        nd = s_.get("notice_period_days")
+        nd = int(row["notice_days"])
         if nd and nd > profile.role.notice_preference_days:
             cc.append(f"{nd}-day notice period")
         if loc2_s[cid] <= 0.4: cc.append("location/relocation friction")
-        if s_.get("recruiter_response_rate", 1) < 0.2:
+        rrr = float(ir["recruiter_response_rate"])     # -1 == missing (NOT "low")
+        if 0 <= rrr < 0.2:
             cc.append("low recruiter response rate")
         if cc:
             out += "; concern: " + ", ".join(cc[:2])
@@ -213,12 +216,6 @@ def main():
         w = csv.writer(f, quoting=csv.QUOTE_MINIMAL)
         w.writerow(["candidate_id", "rank", "score", "reasoning"])
         w.writerows(rows_out)
-    # full top-k profiles as a JSON array (rank/score/reasoning + complete record)
-    top_json = [{"rank": rank, "candidate_id": cid, "score": sc,
-                 "reasoning": reason, **prof[cid]}
-                for cid, rank, sc, reason in rows_out]
-    with open(os.path.join(OUT, "top_100.json"), "wb") as f:
-        f.write(orjson.dumps(top_json, option=orjson.OPT_INDENT_2))
     t.mark("reasoning_write_csv")
 
     # ---- 15. telemetry ----------------------------------------------------
@@ -229,7 +226,8 @@ def main():
             "peak_memory_gb": max(s["peak_gb"] for s in t.stages),
             "artifact_mb": {k: round(v, 1) for k, v in sizes.items()},
             "artifact_total_mb": round(sum(sizes.values()), 1),
-            "candidates_jsonl_mb": round(os.path.getsize(args.candidates) / 2**20, 1),
+            "candidates_jsonl_mb": (round(os.path.getsize(args.candidates) / 2**20, 1)
+                                    if os.path.exists(args.candidates) else None),
             "n_candidates": int(N), "n_job_chunks": int(J),
             "alpha": alpha,
             "budget": {"wall_limit_s": 300, "ram_limit_gb": 16, "disk_limit_gb": 5},
@@ -240,7 +238,7 @@ def main():
     print(f"\n[rank] TOTAL wall={total_wall:.1f}s ({total_wall/300*100:.1f}% of 5-min budget) "
           f"peak_ram={tele['peak_memory_gb']:.2f}GB ({tele['headroom']['ram_pct_used']:.0f}% of 16GB) "
           f"artifacts={tele['artifact_total_mb']:.0f}MB")
-    print(f"[rank] wrote {args.out} ({k} rows) + top_100.json + telemetry.json")
+    print(f"[rank] wrote {args.out} ({k} rows) + telemetry.json")
 
 
 if __name__ == "__main__":

@@ -65,7 +65,8 @@ def _months_between(a, b):
 
 
 # ---------------------------------------------------------------------------
-def build_features(profile, method, *, art_dir, ref_date=None) -> "pd.DataFrame":
+def build_features(profile, method, *, art_dir, ref_date=None,
+                   _cand_slice=None) -> "pd.DataFrame":
     """Build the JD-dependent feature frame live from JD-independent artifacts.
 
     Parameters
@@ -114,8 +115,11 @@ def build_features(profile, method, *, art_dir, ref_date=None) -> "pd.DataFrame"
     IR = method.integrity
 
     # -- load artifacts -----------------------------------------------------
-    job_matrix = np.load(os.path.join(art_dir, "job_embeddings.npy"))
-    summ_matrix = np.load(os.path.join(art_dir, "summary_embeddings.npy"))
+    # mmap the big embedding matrices: the serial path touches all rows anyway,
+    # but a shard (parallel driver) then reads ONLY its job-row slice instead of
+    # loading the full ~440 MB into every worker.
+    job_matrix = np.load(os.path.join(art_dir, "job_embeddings.npy"), mmap_mode="r")
+    summ_matrix = np.load(os.path.join(art_dir, "summary_embeddings.npy"), mmap_mode="r")
     offsets = np.load(os.path.join(art_dir, "job_offsets.npy"))
     jd_vecs = np.load(os.path.join(art_dir, "jd_vectors.npy"))          # (NSIG, d)
     evid_df = pd.read_parquet(os.path.join(art_dir, "evidence_texts.parquet"))
@@ -148,6 +152,25 @@ def build_features(profile, method, *, art_dir, ref_date=None) -> "pd.DataFrame"
 
     starts, ends = offsets[:, 0], offsets[:, 1]
     counts = ends - starts
+
+    # -- optional candidate-range shard (used by build_features_parallel) ----
+    # Subset to candidates [a, b) and the job rows they own, then rebase the
+    # offsets so the per-segment reduceat math is local. Every feature is
+    # computed per-candidate with NO cross-candidate reduction, so a shard's
+    # rows are bit-identical to the same rows of the full build.
+    if _cand_slice is not None:
+        a, b = _cand_slice
+        js, je = int(starts[a]), int(ends[b - 1])
+        job_matrix = job_matrix[js:je]
+        summ_matrix = summ_matrix[a:b]
+        evid_df = evid_df.iloc[a:b]
+        intr = intr.iloc[a:b]
+        bm25_df = bm25_df.iloc[a:b]
+        idx = evid_df.index
+        offsets = offsets[a:b] - js
+        starts, ends = offsets[:, 0], offsets[:, 1]
+        counts = ends - starts
+        N, J = len(idx), je - js
 
     # ---- parse per-job meta into flat arrays (single pass) ----------------
     msince = np.zeros(J); dur = np.ones(J)
@@ -456,3 +479,49 @@ def build_features(profile, method, *, art_dir, ref_date=None) -> "pd.DataFrame"
     df["city_ok"] = city_ok.astype(int)
     df["notice_days"] = days
     return df
+
+
+def _shard_worker(profile, method, art_dir, ref_date, cand_slice):
+    """Top-level (picklable) worker: build one candidate-range shard."""
+    return build_features(profile, method, art_dir=art_dir, ref_date=ref_date,
+                          _cand_slice=cand_slice)
+
+
+def build_features_parallel(profile, method, *, art_dir, ref_date=None,
+                            workers=None) -> "pd.DataFrame":
+    """Parallel driver for build_features.
+
+    Shards the candidate pool into `workers` contiguous ranges, builds each
+    shard's feature frame in its own process (mmap'd embeddings → no 440 MB
+    reload per worker), and concatenates the shards IN ORDER. The output is
+    identical to a serial build_features call: every feature is computed
+    per-candidate with no cross-candidate operation, so the row partition is
+    pure bookkeeping.
+
+    workers defaults to $RANK_WORKERS, else os.cpu_count(); workers<=1 (or a
+    small pool) runs in-process. CPU-bound regex/text work is the bottleneck and
+    parallelises near-linearly; this does NOT rely on duplicate text.
+    """
+    src = "RANK_WORKERS" if os.environ.get("RANK_WORKERS", "0") not in ("", "0") \
+        else "os.cpu_count()"
+    if workers is None:
+        workers = int(os.environ.get("RANK_WORKERS", "0")) or (os.cpu_count() or 1)
+    n = int(np.load(os.path.join(art_dir, "job_offsets.npy"),
+                    mmap_mode="r").shape[0])
+    if workers <= 1 or n < 20000:
+        print(f"[features] build_features SERIAL "
+              f"(workers={workers} via {src}, n={n})", flush=True)
+        return build_features(profile, method, art_dir=art_dir, ref_date=ref_date)
+
+    bounds = [n * i // workers for i in range(workers + 1)]
+    tasks = [(profile, method, art_dir, ref_date, (bounds[i], bounds[i + 1]))
+             for i in range(workers) if bounds[i + 1] > bounds[i]]
+    affinity = len(os.sched_getaffinity(0)) if hasattr(os, "sched_getaffinity") \
+        else os.cpu_count()
+    print(f"[features] build_features PARALLEL: {len(tasks)} workers "
+          f"(via {src}; affinity={affinity} cpu_count={os.cpu_count()}) "
+          f"over n={n} candidates", flush=True)
+    import multiprocessing as mp
+    with mp.Pool(len(tasks)) as pool:
+        parts = pool.starmap(_shard_worker, tasks)
+    return pd.concat(parts)

@@ -1,0 +1,170 @@
+# ============================================================================
+# jd_profile.yaml  —  THE JD SEAM
+# ----------------------------------------------------------------------------
+# Everything the ranker knows about ONE job description lives here, and ONLY
+# here. To retarget the whole system to a DIFFERENT role you fill this one file
+# from the new JD (see RETARGETING.md), run `python -m redrob_ranker.jd_compile`,
+# and the SAME code produces new features and a new ranking — no Python edits.
+#
+# What is NOT in this file: the scoring *mechanism* (recency half-lives, gate
+# ladders, integrity penalties, the LightGBM blend, generic recruiting
+# lexicons, world facts). Those are JD-stable and live in method_config.yaml.
+#
+# Rule of thumb for "does this belong here?":
+#   - Would a recruiter change it when the role changes?      -> jd_profile.yaml
+#   - Is it a property of the ranking algorithm, not the JD?  -> method_config.yaml
+#
+# Validated at load time against jd/jd_profile.schema.json.
+# Worked example below = the Redrob "Senior AI Engineer" hackathon JD.
+# ============================================================================
+schema_version: 1
+
+# ---------------------------------------------------------------------------
+# 1. The role, in structured form (extracted from the JD prose).
+# ---------------------------------------------------------------------------
+role:
+  title: "Senior AI Engineer — Founding Team"
+  company: "Redrob AI"
+  domain: "AI/ML — search, retrieval & ranking (HR-tech)"
+  summary: >-
+    Senior AI engineer for an HR-tech product company to own the intelligence
+    layer: embeddings-based retrieval, hybrid search over a vector DB, and an
+    end-to-end ranking/recommendation system, with rigorous offline+online
+    evaluation. Shipper-leaning, hands-on, 5-9 yrs, product (not services) bg.
+  # Ideal years-of-experience band -> Gaussian taper in the scorer.
+  # JD: "5-9 years ... ideal 6-8", peak ~7.
+  ideal_experience:
+    min_years: 5
+    max_years: 9
+    peak_years: 7.0
+    sigma_years: 2.5
+  # Notice period the JD is comfortable with before a penalty kicks in.
+  # JD: "love sub-30-day ... can buy out up to 30 ... 30+ bar gets higher."
+  notice_preference_days: 90
+
+# ---------------------------------------------------------------------------
+# 2. Geography (the only per-JD part of location scoring; the ladder/mechanism
+#    lives in method_config.location_ladder).
+# ---------------------------------------------------------------------------
+locations:
+  preferred:   [pune, noida]                                  # full credit
+  acceptable:  [hyderabad, mumbai, delhi, gurgaon, gurugram, ncr]  # near-full
+  relocation_acceptable: true        # JD welcomes relocation from Tier-1 cities
+  remote_acceptable: false           # JD is hybrid (Tue/Thu office)
+
+# ---------------------------------------------------------------------------
+# 3. SIGNALS — the must-have capability axes of THIS role.
+#
+#    Each signal unifies what v5/v6 kept in three mismatched places:
+#      * a dense `query`        (embedded by jd_compile -> jd_vectors.npy)
+#      * an `evidence_regex`    (applied live over career history text)
+#      * a `dense_weight`       (its share of the deterministic dense_fit)
+#    The feature code iterates over this list generically: add/remove a signal
+#    here and the features, coverage and reasoning all follow. `id` is the
+#    stable column prefix (e.g. ranking__recencywt, evid_ranking).
+#
+#    evidence_regex is OPTIONAL: signals that are model-only (applied_ml,
+#    llm_ft) carry a query but no evidence channel and dense_weight 0.0 — they
+#    feed the LightGBM student, not the hand-weighted dense_fit (v5/v6 parity).
+# ---------------------------------------------------------------------------
+signals:
+  - id: ranking
+    label: "shipped end-to-end ranking / recommendation systems"
+    query: >-
+      built and shipped end to end ranking search or recommendation system to
+      real users at scale, recommender learning to rank, production
+    evidence_regex: 'learning[- ]to[- ]rank|\bltr\b|lambdamart|ranking (?:model|layer|function|pipeline)|re[- ]?rank|recommendation (?:system|engine|model)|recsys|discovery feed|search (?:system|engine|product|ranking)'
+    dense_weight: 0.28
+
+  - id: retrieval
+    label: "embeddings-based retrieval / semantic search in production"
+    query: >-
+      production embeddings based retrieval semantic search sentence
+      transformers BGE E5 vector embeddings deployed to real users, embedding
+      drift index refresh retrieval quality
+    evidence_regex: 'embedding[- ]based (?:retrieval|search)|semantic search|dense retrieval|vector (?:search|recall)|\bfaiss\b|sentence[- ]transformers?|bi[- ]encoder|fine[- ]tuned? (?:bge|e5|embedding)|keyword[- ]based.{0,40}embedding'
+    dense_weight: 0.22
+
+  - id: vectordb
+    label: "vector database / hybrid-search infrastructure"
+    query: >-
+      vector database hybrid search FAISS Pinecone Weaviate Qdrant Milvus
+      OpenSearch Elasticsearch approximate nearest neighbour index
+    evidence_regex: '\bfaiss\b|pinecone|weaviate|qdrant|milvus|opensearch|elasticsearch|vector (?:database|db|index|store)|hybrid (?:search|retrieval)|\bhnsw\b|approximate nearest|bm25.{0,40}(?:dense|vector|embedding)|(?:dense|vector|embedding).{0,40}bm25'
+    dense_weight: 0.12
+
+  - id: evaluation
+    label: "ranking-evaluation frameworks (NDCG/MRR/MAP, offline<->online, A/B)"
+    query: >-
+      evaluation framework for ranking systems NDCG MRR MAP offline online A/B
+      testing relevance metrics
+    evidence_regex: 'ndcg|\bmrr\b|\bmap\b|mean average precision|recall@|precision@|a/b[- ]test|ab[- ]test|offline.{0,50}online|online.{0,50}offline|relevance label|interleav'
+    dense_weight: 0.10
+
+  - id: applied_ml
+    label: "applied ML at a product company (model serving, feature eng)"
+    query: >-
+      applied machine learning engineer at a product company, deployed ML
+      models to production, feature engineering, model serving
+    evidence_regex: null         # model-only axis (no hand-weighted evidence)
+    dense_weight: 0.10
+
+  - id: llm_ft
+    label: "LLM fine-tuning (LoRA/QLoRA/PEFT)  [nice-to-have]"
+    query: >-
+      LLM fine tuning LoRA QLoRA PEFT large language models prompt
+    evidence_regex: null         # model-only axis; nice-to-have, not dense
+    dense_weight: 0.0
+
+# Two cross-cutting dense contributions kept out of `signals` because they are
+# derived, not retrieved (no embedding query): the YoE-band fit and the
+# in-domain vs out-of-domain ratio. Weights here express role priority.
+dense_extras:
+  yoe_fit_weight: 0.08
+  domain_ratio_weight: 0.10
+
+# Cross-encoder teacher query (train.py). Positive-evidence-only: a relevance
+# CE cannot follow negated instructions, so phrase what you WANT, not what you
+# reject (rejects are handled by red_flags + gates).
+cross_encoder_query: >-
+  Senior AI engineer for an HR-tech product company who has shipped
+  embeddings-based retrieval and semantic search to production for real users,
+  built hybrid search over a vector database such as FAISS, Pinecone, Qdrant or
+  Elasticsearch, owned an end-to-end ranking, search or recommendation system at
+  scale at a product company, designs ranking evaluation with NDCG, MRR, MAP,
+  offline-to-online calibration and A/B testing, writes strong production
+  Python, 5-9 years of experience with recent hands-on coding.
+
+# ---------------------------------------------------------------------------
+# 4. Domain fit — what counts as IN-domain vs OUT-of-domain for this role.
+#    JD: "primary expertise in CV/speech/robotics without NLP/IR" is a no.
+# ---------------------------------------------------------------------------
+domain:
+  in_domain_terms:  [nlp, natural language, retrieval, search, ranking,
+                     recommendation, recommender, embedding, information
+                     retrieval, semantic, transformer, llm, text, bm25]
+  out_of_domain_terms: [computer vision, image, yolo, opencv, detection,
+                        segmentation, speech, asr, audio, robotics, slam]
+  in_domain_regex:  '\bnlp\b|natural language|retrieval|search|ranking|recommend|embedding|semantic|information retrieval|text|\bllm\b|transformer'
+  out_of_domain_regex: 'computer vision|image (?:classification|moderation|recognition)|\byolo\b|opencv|object detection|segmentation|resnet|\bspeech\b|\basr\b|robotics'
+
+# ---------------------------------------------------------------------------
+# 5. Which platform skill-assessment scores are relevant to THIS role.
+#    (Redrob signal #9 skill_assessment_scores is a dict[str,0-100]; we only
+#    credit assessments whose skill name matches this regex.)
+# ---------------------------------------------------------------------------
+relevant_skill_regex: 'embed|vector|semantic|retriev|\bsearch\b|rank|recommend|\bnlp\b|natural language|information retrieval|\bllm\b|fine[- ]?tun|lora|qlora|transformer|sentence|bm25|faiss|pinecone|qdrant|weaviate|milvus|elasticsearch|opensearch|python|pytorch|machine learning|deep learning|feature engineering|xgboost|lightgbm|a/b|ab test|ndcg|hugging'
+
+# ---------------------------------------------------------------------------
+# 6. RED FLAGS — the "things we explicitly do NOT want" the JD calls out.
+#    Each toggles a damp/gate whose MAGNITUDE lives in method_config.damps /
+#    method_config.integrity (the mechanism is JD-stable; whether it APPLIES to
+#    this role is the JD decision). Disable one by setting enabled: false.
+# ---------------------------------------------------------------------------
+red_flags:
+  cv_primary:      {enabled: true}   # CV/speech-primary career w/o NLP/IR
+  job_hopper:      {enabled: true}   # title-chasing / <19mo mean tenure
+  only_consulting: {enabled: true}   # 100% services-firm career (TCS/Infosys..)
+  stale_ic_role:   {enabled: true}   # no IC/coding role in >18 months
+  # Behavioral availability (dormant + unresponsive) and integrity (impossible
+  # profiles / honeypots) are always-on gates from method_config, not per-JD.
