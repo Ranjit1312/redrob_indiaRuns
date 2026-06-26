@@ -140,22 +140,54 @@ def main():
     t.mark("lgbm_predict_100k")
 
     # ---- 3. deterministic composite (pure numpy, replicates the rule pass) --------
+    # Evidence-gated scoring. The JD is explicit that listed AI keywords are a trap
+    # ("all the AI keywords as skills but title is Marketing Manager is not a fit")
+    # and that career history is the truth. So career EVIDENCE is a necessary gate,
+    # and listed-skill corroboration / platform assessments MULTIPLY in as bounded
+    # modifiers (neutral when absent) -- they can confirm or discount evidence, but
+    # can never substitute for it. (Earlier versions used max(ai_corr, evid_coverage,
+    # assess_corr), which let a keyword signal override missing career evidence.)
     FACETS = ["retrieval", "vectordb", "ranking", "evaluation", "applied_ml", "llm_ft"]
     dense_fit = (0.28 * X["ranking__recencywt"] + 0.22 * X["retrieval__recencywt"] +
                  0.12 * X["vectordb__recencywt"] + 0.10 * X["evaluation__recencywt"] +
                  0.10 * X["applied_ml__recencywt"] + 0.08 * X["yoe_fit"] +
                  0.10 * X["domain_nlp_ratio"])
     lex_fit = X[[f"{f}__bm25" for f in FACETS]].mean(axis=1)
-    fit = (0.38 * dense_fit + 0.09 * lex_fit + 0.40 * X["evid_coverage"] +
-           0.08 * X["depth_bonus"] + 0.05 * X["assess_strength"])
+
+    # additive evidence channels: dense semantic match + lexical + ownership depth
+    fit = 0.38 * dense_fit + 0.09 * lex_fit + 0.08 * X["depth_bonus"]
+
+    # (1) evidence GATE -- the necessary condition. Low floor (0.15) so "no career
+    #     evidence" really costs; full credit (1.0) at evid_coverage == 1.
+    g_evid = 0.15 + 0.85 * X["evid_coverage"]
+    # (2) claim-consistency -- DISCOUNT-only. Neutral (x1) when the candidate lists
+    #     no AI skills; ~0.5 when they list AI buzzwords the career text doesn't
+    #     support (the keyword-stuffer signal). Never lifts above 1.0.
+    m_claim = np.where(X["ai_skills_claimed"].values == 0,
+                       1.0, 0.5 + 0.5 * X["ai_skill_corroboration"].values)
+    # (3) assessment BONUS -- already coverage-gated (full credit only at cov>=0.25),
+    #     so it can only reward a candidate who ALSO has career evidence. Absence of
+    #     assessments (94% of the pool) is neutral, never zero.
     assess_corr = (X["assess_strength"].values
                    * np.minimum(1.0, X["evid_coverage"].values / 0.25))
-    fit *= 0.4 + 0.6 * np.maximum.reduce([X["ai_skill_corroboration"].values,
-                                          X["evid_coverage"].values, assess_corr])
+    m_assess = 1.0 + 0.25 * assess_corr
+    fit = fit * g_evid * m_claim * m_assess
+
+    # (4) recent-coding ladder ("this role writes code"). months_since_ic_role == 999
+    #     is the never-held-an-IC-role sentinel -> falls in the >36 bucket (heavy
+    #     floor), no longer collapsed with "coded 19 months ago".
+    msi = X["months_since_ic_role"].values
+    recency_mult = np.where(msi > 36, 0.35,
+                   np.where(msi > 18, 0.70,
+                   np.where(msi > 1.0, 0.90, 1.0)))
+    fit = fit * recency_mult
+    # (5) experience band (JD 5-9 yrs) as a real multiplier, not a ~3% additive nudge.
+    fit = fit * (0.60 + 0.40 * X["yoe_fit"])
+
+    # structured damps (unchanged)
     fit *= np.where(X["cv_primary"] == 1, 0.60, 1.0)
     fit *= np.where(X["hopper"] == 1, 0.55, 1.0)
     fit *= 1.0 - 0.30 * X["only_consulting"]
-    fit *= np.where(X["months_since_ic_role"] > 18, 0.85, 1.0)
     # v4 location: India non-target no-reloc 0.40->0.33; remote-pref damps
     loc2 = X["loc_fit2"].where(X["loc_fit2"] != 0.40, 0.33)
     capm = (v4["remote_pref"] == 1) & (v4["no_reloc"] == 1) & (v4["city_ok"] == 0)
