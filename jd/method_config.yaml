@@ -1,0 +1,166 @@
+# ============================================================================
+# method_config.yaml  —  THE JD-STABLE MECHANISM
+# ----------------------------------------------------------------------------
+# Everything here is a property of the RANKING ALGORITHM, not of any one job
+# description. You normally do NOT touch this when retargeting to a new JD —
+# it's the tuned, audited machinery that v1->v5 converged on. Kept separate
+# from jd_profile.yaml so the JD seam stays small and obviously "fill-able".
+#
+# (If you genuinely re-tune the method — e.g. change the blend alpha or a gate
+# ladder — that's a method change, version it deliberately.)
+# ============================================================================
+schema_version: 1
+
+# Deterministic "today" for all recency / dormancy / tenure arithmetic.
+runtime:
+  ref_date: "2026-06-06"
+
+# Recency decay (half-life in months) for the two pooled channels.
+recency:
+  facet_halflife_months:    18.0     # JD's ~18-month "recent work" preference
+  evidence_halflife_months: 30.0
+
+thresholds:
+  facet_hit: 0.45                     # cosine >= this counts toward __nhits
+
+# The deterministic `fit` is assembled in rules.py to MATCH root rank.py exactly.
+#   ADDITIVE channels (dense semantic + BM25 lexical + ownership depth):
+#     fit = dense*dense_fit + lexical*lex_fit + depth*depth_bonus
+#   then MULTIPLICATIVE: evidence gate * claim discount * assessment bonus *
+#   recency ladder * experience band * red-flag damps * location.
+# (Per-axis dense weights live in jd_profile.signals[].dense_weight; the two
+#  derived dense terms in jd_profile.dense_extras.)
+additive_weights:
+  dense:   0.38
+  lexical: 0.09          # BM25 lexical facet channel (mean of <id>__bm25)
+  depth:   0.08          # ownership/scale depth_bonus
+
+# (1) evidence GATE — necessary condition: fit *= floor + span*evid_coverage.
+#     Low floor so "no career evidence" really costs (the JD's keyword trap).
+evidence_gate: {floor: 0.15, span: 0.85}
+
+# (2) claim-consistency — DISCOUNT only. Neutral (x1) when no AI skills are
+#     listed; base + span*corroboration when they are (keyword-stuffer signal,
+#     never lifts above 1.0).
+claim_consistency: {base: 0.5, span: 0.5}
+
+# (3) assessment BONUS — coverage-gated reward (full credit at full_credit_cov):
+#     m_assess = 1 + weight * assess_strength * min(1, evid_coverage/full_credit_cov).
+assessment_bonus: {weight: 0.25, full_credit_cov: 0.25}
+
+# (4) recent-coding ladder ("this role writes code"): months_since_ic_role
+#     buckets (descending gt thresholds); below the last -> 1.0. The 999
+#     never-held-an-IC-role sentinel falls in the heaviest bucket. Replaces the
+#     old binary stale_ic damp. Gated by jd_profile.red_flags.stale_ic_role.
+recency_ladder:
+  - {gt: 36,  mult: 0.35}
+  - {gt: 18,  mult: 0.70}
+  - {gt: 1.0, mult: 0.90}
+
+# (5) experience band (JD ideal years) as a real multiplier: base + span*yoe_fit.
+experience_band: {base: 0.60, span: 0.40}
+
+# Red-flag DAMP magnitudes (whether each applies to a role is in
+# jd_profile.red_flags). fit *= (these), compounding.
+damps:
+  cv_primary:           0.60
+  hopper:               0.55
+  only_consulting:      0.30         # fit *= 1 - 0.30 * only_consulting_frac
+  loc_base:             0.55         # fit *= loc_base + loc_span * loc2
+  loc_span:             0.45
+  loc_floor_threshold:  0.12
+  loc_floor_damp:       0.60
+
+hopper_def: {min_jobs: 4, mean_tenure_below_months: 19}
+hop_rate_tenure_months: 18
+
+# Integrity ladder — the consistency checks that catch honeypots / impossible
+# profiles. Multiplicative penalties (1.0 = clean).
+integrity:
+  hard: 0.05                          # any HARD inconsistency
+  career_sum_slack_years: 3.5         # sum(job tenures)/12 > yoe + 3.5
+  single_role_slack_years: 1.5        # longest role/12 > yoe + 1.5
+  yoe_vs_history: {ratio: 1.6, slack_months: 18}   # yoe*12 > career_m*1.6 + 18
+  summary_yoe_tolerance: 3.0          # |yoe - "N years" in summary| > 3
+  too_many_expert: 8                  # >=8 "expert" skills
+  skill_dur: {ratio: 1.25, slack_months: 6, min_count: 2,
+              max_pen: 0.15, per_skill_pen: 0.04}  # skill used longer than career
+  salary_inverted: 0.97               # expected min > max
+  anachronism: 0.30                   # certified in tech before it existed
+  la_lt_signup: 0.97                  # last_active < signup_date
+  concurrent_deg: 0.93                # overlapping full-time degrees
+
+# World facts for anachronism detection (a cert dated before the tech existed).
+# Reference data, not JD-specific.
+world_facts:
+  tech_first_year:
+    langchain: 2022
+    llama:     2023
+
+# Behavioral availability multiplier (Redrob signals #3,#7,#4,#19,#1).
+availability:
+  weights: {recency: 0.35, response: 0.25, open_to_work: 0.15,
+            interview: 0.15, completeness: 0.10}
+  base: 0.5
+  span: 0.6
+  inactive_halflife_months: 6.0
+  default_months_inactive: 12.0
+  dormancy: {months_inactive: 6, rrr_below: 0.2, damp: 0.5}   # dormant+unresponsive
+  low_rr_only_damp: 0.8
+
+# Notice-period multiplier ladder (days -> mult). The JD's tolerance threshold
+# is jd_profile.role.notice_preference_days; this is the penalty shape.
+notice_tiers:
+  - {max_days: 90,    mult: 1.0}
+  - {max_days: 119,   mult: 0.93}
+  - {max_days: 120,   mult: 0.90}
+  - {max_days: 99999, mult: 0.85}
+
+assessment: {score_floor: 40.0, score_span: 50.0, count_shrink: 0.5, top_k: 3}
+
+# Blend weight on the LightGBM student (gates applied OUTSIDE the blend).
+alpha: 0.2
+
+# Generic, role-stable parsing helpers and recruiting lexicons. Reusable across
+# JDs; only the *domain* term sets are per-JD (jd_profile.domain).
+years_regex: '(\d+(?:\.\d+)?)\s*years of (?:hands[- ]on )?experience'
+context_regex:
+  internal: 'internal (?:knowledge base|dashboard|tool|search|stakeholders)|internal[- ]facing'
+  owner:    '\bled\b|\bowned?\b|designed|architected|from scratch|built (?:the|an?|our)\b|drove\b|spearhead'
+  scale:    '\d+\s?m\+|\bqps\b|queries per (?:month|second|day)|\bp9[59]\b|million|\d+k\+? (?:users|queries|docs)'
+evidence_context: {internal: 0.4, no_owner: 0.7, no_scale: 0.85}
+lexicons:
+  consulting: [tcs, tata consultancy, infosys, wipro, accenture, cognizant,
+               capgemini, tech mahindra, hcl, mindtree, ltimindtree, deloitte]
+  product_industries: [software, fintech, food delivery, ai/ml, e-commerce,
+                       ecommerce, internet, saas, transportation, social media,
+                       gaming, edtech, healthtech]
+  ic_tokens:   [engineer, developer, scientist, programmer, sde]
+  mgmt_tokens: [manager, lead, architect, director, vp, head, principal, consultant]
+  # Generic "AI/ML skill" name fragments used by the skill-corroboration check
+  # (a candidate's claimed AI skills must be backed by career-history text).
+  # Role-stable craft vocabulary, not a per-JD list — kept here in the mechanism
+  # config. (v6 carried this as jd_profile.lexicons.ai_skill_terms; v7 moves it
+  # to method_config because it is JD-stable.)
+  ai_skill_terms: [nlp, llm, fine-tun, embed, machine learning, deep learning,
+                   recommend, retriev, pytorch, mlops, tensorflow, transformer,
+                   ranking, search, faiss, vector, feature engineering, ml]
+
+# Location scoring ladder (mechanism). The per-JD city lists are in
+# jd_profile.locations; india_tier1 / india_markers are geography reference.
+location_ladder:
+  india_tier1:   [pune, noida, hyderabad, bangalore, bengaluru, mumbai, delhi,
+                  gurgaon, gurugram, chennai, ncr, kolkata]
+  india_markers: [india, pradesh, maharashtra, karnataka, telangana, tamil,
+                  bengal, kerala, gujarat, rajasthan, punjab, delhi, haryana,
+                  bihar, odisha, assam]
+  scores: {preferred: 1.0, ok_city: 0.9, india_relocate: 0.75,
+           india_no_reloc: 0.40, abroad_relocate: 0.50, abroad_no_reloc: 0.12}
+  v4: {india_no_reloc_override: 0.33, remote_noreloc_offcity_cap: 0.25,
+       remote_pref_damp: 0.9}
+
+# Model identifiers used by the (GPU) precompute / train steps.
+models:
+  embedder: {name: BAAI/bge-small-en-v1.5, batch_size: 256}
+  teacher:  {name: BAAI/bge-reranker-v2-m3, max_length: 1024,
+             shortlist: 8000, negatives: 4000, batch: 16, seed: 42}

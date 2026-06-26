@@ -1,0 +1,21 @@
+# [precompute step] — additional deps for the offline GPU phase ONLY
+# (embed_candidates.py bi-encoder, jd_compile.py query embedding, train.py
+# cross-encoder teacher + LightGBM tuning). May use GPU; unconstrained.
+#
+# Install requirements-rank.txt FIRST, then this file on top (it re-lists the
+# shared CPU deps so the precompute venv is self-contained).
+numpy>=2.4
+pandas>=3.0
+pyarrow>=24
+orjson>=3.11
+psutil>=7
+lightgbm>=4.6
+pyyaml>=6
+rank_bm25>=0.2          # BM25 lexical facet channel (jd_compile only)
+
+# GPU / model deps (rank step never imports these)
+torch>=2.12
+sentence-transformers>=5
+transformers>=4.44
+scikit-learn
+tqdm

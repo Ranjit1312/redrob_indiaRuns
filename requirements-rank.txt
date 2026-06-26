@@ -1,0 +1,14 @@
+# [rank step] — the ONLY packages the constrained ranking step needs
+# (rank.py + redrob_ranker.{profile,features,rules,intrinsic}, plus
+# validate_submission). CPU only, no network, <=5 min, <=16 GB.
+#
+# Install JUST this file into the rank venv: torch / sentence-transformers are
+# deliberately ABSENT, so GPU use in the rank step is impossible by construction.
+# pyyaml reads the JD seam (jd_profile.yaml / method_config.yaml).
+numpy>=2.4
+pandas>=3.0
+pyarrow>=24
+orjson>=3.11
+psutil>=7
+lightgbm>=4.6
+pyyaml>=6

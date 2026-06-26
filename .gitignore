@@ -46,3 +46,6 @@ f_tmp*
 .vscode/
 .idea/
 *.swp
+
+artifacts_v7/*.npy
+artifacts_v7/_incremental/

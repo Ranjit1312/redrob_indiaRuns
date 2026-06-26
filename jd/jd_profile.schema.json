@@ -1,0 +1,103 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://redrob.example/jd_profile.schema.json",
+  "title": "JD Profile (the JD seam)",
+  "description": "The single, validated structure that captures everything the Redrob ranker knows about one job description. Fill this from a new JD (see RETARGETING.md) and the same code retargets. method_config.yaml (the JD-stable mechanism) is intentionally NOT described here.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["schema_version", "role", "locations", "signals", "cross_encoder_query", "domain", "relevant_skill_regex", "red_flags"],
+  "properties": {
+    "schema_version": {"type": "integer", "const": 1},
+
+    "role": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["title", "domain", "ideal_experience", "notice_preference_days"],
+      "properties": {
+        "title":   {"type": "string", "minLength": 1},
+        "company": {"type": "string"},
+        "domain":  {"type": "string", "minLength": 1, "description": "Short domain label, e.g. 'AI/ML — search & ranking'."},
+        "summary": {"type": "string", "description": "1-3 sentence plain-language gist of the role."},
+        "ideal_experience": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["peak_years", "sigma_years"],
+          "properties": {
+            "min_years":   {"type": "number", "minimum": 0},
+            "max_years":   {"type": "number", "minimum": 0},
+            "peak_years":  {"type": "number", "minimum": 0, "description": "Center of the YoE Gaussian (best-fit experience)."},
+            "sigma_years": {"type": "number", "exclusiveMinimum": 0, "description": "Std-dev of the YoE Gaussian taper."}
+          }
+        },
+        "notice_preference_days": {"type": "integer", "minimum": 0, "description": "Notice period at/below which no penalty applies."}
+      }
+    },
+
+    "locations": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["preferred", "acceptable", "relocation_acceptable", "remote_acceptable"],
+      "properties": {
+        "preferred":  {"type": "array", "items": {"type": "string"}, "description": "City tokens (lowercase) scored at full credit."},
+        "acceptable": {"type": "array", "items": {"type": "string"}, "description": "City tokens scored near-full."},
+        "relocation_acceptable": {"type": "boolean"},
+        "remote_acceptable":     {"type": "boolean"}
+      }
+    },
+
+    "signals": {
+      "type": "array",
+      "minItems": 1,
+      "description": "The must-have capability axes of the role. The feature code iterates over these generically; `id` is the stable column prefix.",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["id", "label", "query", "dense_weight"],
+        "properties": {
+          "id":    {"type": "string", "pattern": "^[a-z][a-z0-9_]*$", "description": "Stable column-prefix id (e.g. 'retrieval')."},
+          "label": {"type": "string", "minLength": 1, "description": "Human phrase used in candidate reasoning."},
+          "query": {"type": "string", "minLength": 1, "description": "Dense facet query, embedded by jd_compile."},
+          "evidence_regex": {"type": ["string", "null"], "description": "Case-insensitive regex matched over career-history text. null = model-only axis (no evidence channel)."},
+          "dense_weight": {"type": "number", "minimum": 0, "description": "Share of the deterministic dense_fit. 0.0 = student-only signal."}
+        }
+      }
+    },
+
+    "dense_extras": {
+      "type": "object",
+      "additionalProperties": false,
+      "description": "Weights for the two derived (non-retrieved) dense contributions.",
+      "properties": {
+        "yoe_fit_weight":      {"type": "number", "minimum": 0},
+        "domain_ratio_weight": {"type": "number", "minimum": 0}
+      }
+    },
+
+    "cross_encoder_query": {"type": "string", "minLength": 1, "description": "Positive-evidence-only query for the cross-encoder teacher (train.py)."},
+
+    "domain": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["in_domain_terms", "out_of_domain_terms", "in_domain_regex", "out_of_domain_regex"],
+      "properties": {
+        "in_domain_terms":     {"type": "array", "items": {"type": "string"}},
+        "out_of_domain_terms": {"type": "array", "items": {"type": "string"}},
+        "in_domain_regex":     {"type": "string"},
+        "out_of_domain_regex": {"type": "string"}
+      }
+    },
+
+    "relevant_skill_regex": {"type": "string", "minLength": 1, "description": "Which platform skill-assessment keys count for this role."},
+
+    "red_flags": {
+      "type": "object",
+      "description": "Toggles for the JD's explicit 'do not want' damps. Magnitudes live in method_config.",
+      "additionalProperties": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["enabled"],
+        "properties": {"enabled": {"type": "boolean"}}
+      }
+    }
+  }
+}
