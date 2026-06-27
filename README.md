@@ -23,7 +23,7 @@ The constrained step that produces the CSV from the candidates file:
 python rank.py --candidates ./candidates.jsonl --out ./submission.csv
 ```
 
-CPU-only, no network, no GPU. It reads the precomputed artifacts in
+CPU-only, no network, no GPU. **It reads the _precomputed artifacts_** in
 `artifacts_v7/` and never imports torch (so a GPU is unreachable by
 construction). Validate the output shape:
 
@@ -101,8 +101,35 @@ to the serial build. `validate_submission.py` reports **PASS on all 11 checks**
 teacher used for distillation, not the hidden ground truth.
 
 ---
+## 4. Architecture
 
-## 4. Scoring methodology & rationale
+```mermaid
+flowchart LR
+  subgraph pool["per candidate POOL (GPU, minutes)"]
+    EC[embed_candidates] --> EMB[(job/summary embeddings)]
+    EC --> INTR[(intrinsic.parquet)]
+    EC --> EVT[(evidence_texts.parquet)]
+  end
+  subgraph jd["per JD (CPU compile / GPU train)"]
+    PROF[jd_profile.yaml] --> JC[jd_compile] --> JV[(jd_vectors.npy + bm25_facets.parquet)]
+    FEAT[(features_v7.parquet<br/>via rank.py --features-only)] --> TR[train: CE teacher -> LGBM student]
+    
+    TR --> MODEL[(model.txt + feature_cols.json)]
+  end
+  subgraph rank["every rank (CPU only, < 5 min)"]
+    R[rank.py] --> SUB[(submission.csv)]
+  end
+  EMB --> R
+  INTR --> R
+  EVT --> R
+  EVT --> TR
+  JV --> R
+  MODEL --> R
+  PROF --> R
+```
+---
+
+## 5. Scoring methodology & rationale
 
 The score is a **deterministic, auditable composite** (every constant lives in
 [`jd/method_config.yaml`](jd/method_config.yaml) / [`jd/jd_profile.yaml`](jd/jd_profile.yaml)),
