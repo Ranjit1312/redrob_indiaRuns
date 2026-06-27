@@ -10,7 +10,7 @@ primary_contact:
 
 github_repository_url: "https://github.com/<USERNAME>/<REPO>"
 
-sandbox_link: "<HOSTED SANDBOX URL — HF Space / Colab / Replit / docker run>"
+sandbox_link: "https://huggingface.co/spaces/Ranjit1312/redrob_india_run_1"
 
 ai_tools_declared:
   - Claude
@@ -38,5 +38,6 @@ methodology_summary: >
   deterministic rules composite in numpy, and blends at alpha=0.2 (rules
   dominate; the alpha sweep peaked there). Integrity, availability and
   notice-period gates are applied OUTSIDE the blend so no learned score can
-  override a disqualifier. Runs in ~3.4s wall / 0.33GB RAM against the 100K
-  pool. Every rule was audit-driven and base-rate-verified before adoption.
+  override a disqualifier. Runs in ~39s wall / 0.31GB RAM against the 100K pool
+  (13% of the 5-min budget; feature build parallelised across cores). Every
+  rule was audit-driven and base-rate-verified before adoption.
