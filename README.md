@@ -1,4 +1,4 @@
-# RedRob Candidate Ranker — v7 ("JD-seam")
+# RedRob Candidate Ranker — (Team: "RJ_In")
 
 Ranks the top-100 candidates from `candidates.jsonl` for the released job
 description and writes a spec-compliant `submission.csv` (`candidate_id, rank,
