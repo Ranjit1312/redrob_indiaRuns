@@ -1,0 +1,11 @@
+# HuggingFace Space — Gradio SDK deps.
+# = the CPU rank stack (mirrors requirements-rank.txt) + gradio. No torch:
+# the sandbox runs the constrained CPU rank step, never the GPU precompute.
+gradio>=4.0
+numpy>=2.4
+pandas>=3.0
+pyarrow>=24
+orjson>=3.11
+psutil>=7
+lightgbm>=4.6
+pyyaml>=6
