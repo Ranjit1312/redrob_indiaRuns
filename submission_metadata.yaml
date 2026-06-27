@@ -4,9 +4,9 @@
 team_name: "<TEAM NAME>"
 
 primary_contact:
-  name: "<PRIMARY CONTACT NAME>"
-  email: "<PRIMARY CONTACT EMAIL>"
-  phone: "<PRIMARY CONTACT PHONE>"
+  name: "Ranjit Jadhawar"
+  email: "jadhawar.ranjit@gmail.com"
+  phone: "+91-8983772752"
 
 github_repository_url: "https://github.com/<USERNAME>/<REPO>"
 
@@ -18,8 +18,8 @@ ai_tools_declared:
 compute_environment: "Windows 11 laptop (RTX 4050 6GB GPU for precompute, 16GB RAM, Python 3.12); rank step reproduced CPU-only in Docker (no GPU, network off, <=16GB) — see DOCKER_RUNBOOK.md"
 
 team_members:
-  - name: "<MEMBER NAME>"
-    email: "<MEMBER EMAIL>"
+  - name: "Ranjit Jadhawar"
+    email: "jadhawar.ranjit@gmail.com"
 
 # <=200 words
 methodology_summary: >
