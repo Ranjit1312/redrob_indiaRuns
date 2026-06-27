@@ -173,6 +173,7 @@ def main():
     # EVID_LABEL is now sourced from the profile's evidence signals (their
     # human label), not a hardcoded dict — a JD swap re-labels reasoning too.
     EVID_LABEL = {s.id: s.label for s in profile.evidence_signals()}
+    ALL_LABEL = {s.id: s.label for s in profile.signals}  # incl. dense-only axes
     loc2_s = pd.Series(loc2, index=idx)
     # Reasoning facts come from the precomputed intrinsic table (the single
     # source of candidate facts) — NOT a re-parse of raw JSON. The feature frame
@@ -186,8 +187,19 @@ def main():
         row, ir = df.loc[cid], intr_reason.loc[cid]
         named = sorted(((kk, row[f"evid_{kk}"]) for kk in EVID_LABEL),
                        key=lambda x: -x[1])
-        strengths = ", ".join(EVID_LABEL[kk] for kk, v in named[:3] if v >= 0.4) \
-                    or "adjacent applied-ML work"
+        hit = [EVID_LABEL[kk] for kk, v in named[:3] if v >= 0.4]
+        if hit:
+            strengths = ", ".join(hit)
+        else:
+            # No career-text evidence cleared the bar — name the strongest
+            # SEMANTIC (dense) alignment instead of a bland catch-all, so
+            # genuinely-relevant but text-light profiles read accurately (and
+            # reasonings vary). Uses the per-signal dense columns already on row.
+            top = max(profile.signals,
+                      key=lambda s: row.get(f"{s.id}__recencywt", 0.0))
+            strengths = (f"applied-ML background; closest alignment is "
+                         f"{ALL_LABEL[top.id]} (semantic match; career text "
+                         f"light on explicit terms)")
         out = (f"{ir['current_title']} with {row['yoe']:.0f} yrs; "
                f"career history shows {strengths}")
         if row["assess_strength"] > 0.5:

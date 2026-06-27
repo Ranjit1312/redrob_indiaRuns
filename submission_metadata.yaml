@@ -15,7 +15,7 @@ sandbox_link: "https://huggingface.co/spaces/Ranjit1312/redrob_india_run_1"
 ai_tools_declared:
   - Claude
 
-compute_environment: "Windows 11 laptop, RTX 4050 6GB (precompute only), 16GB RAM, Python 3.12"
+compute_environment: "Windows 11 laptop (RTX 4050 6GB GPU for precompute, 16GB RAM, Python 3.12); rank step reproduced CPU-only in Docker (no GPU, network off, <=16GB) — see DOCKER_RUNBOOK.md"
 
 team_members:
   - name: "<MEMBER NAME>"
@@ -23,21 +23,22 @@ team_members:
 
 # <=200 words
 methodology_summary: >
-  Two-phase system. Offline precompute (GPU optional): the JD is split into six
-  facet queries embedded with a bi-encoder (bge-small-en-v1.5) and scored
-  against every career chunk with recency weighting, combined with per-facet
-  BM25 and structured fit features; a JD-rule evidence layer scores
-  must-have categories from career descriptions with ownership/context/recency
-  credit, plus a continuous integrity score replacing binary honeypot gates
-  (hard contradictions x0.05, pervasive synthetic noise soft-damped).
-  A cross-encoder teacher (bge-reranker-v2-m3, 8K context, bias-validated on
-  corpus templates) labels an 8K shortlist + 4K random negatives; labels are
-  gated by anti-stuffer corroboration and integrity, then distilled into a
-  tuned LightGBM LambdaMART student. The constrained ranking step is CPU-only:
-  it loads ~16.5MB of artifacts, predicts the student, recomputes the
-  deterministic rules composite in numpy, and blends at alpha=0.2 (rules
-  dominate; the alpha sweep peaked there). Integrity, availability and
-  notice-period gates are applied OUTSIDE the blend so no learned score can
-  override a disqualifier. Runs in ~39s wall / 0.31GB RAM against the 100K pool
-  (13% of the 5-min budget; feature build parallelised across cores). Every
-  rule was audit-driven and base-rate-verified before adoption.
+  Core principle: applied, shipped experience is the ground truth, not keyword
+  tags. The JD's six must-have facets are embedded (bge-small-en-v1.5) and scored
+  against career history with per-facet BM25 and evidence regexes. Each past
+  role's full description is scored as one whole chunk (never split
+  point-by-point), so a "ranking" mention earns credit only with its surrounding
+  ownership, scale and recency context; this preserves who-owned-what and defeats
+  decontextualised keyword-stuffing and template traps. Self-reported skills never
+  lift the score alone (only when corroborated by career text);
+  skill_assessment_scores is the sole trusted out-of-experience signal,
+  evidence-gated and confidence-discounted. Why a LightGBM LambdaMART student on
+  top of deterministic rules: the hand-built rules are auditable domain priors but
+  cannot capture non-linear feature interactions; a student distilled from a
+  cross-encoder teacher learns that residual ordering, blended at alpha=0.2 so
+  rules still dominate 80% - accuracy gains without a black box overriding
+  decisions. Integrity, availability and notice gates apply OUTSIDE the blend, so
+  no learned score overrides a disqualifier; honeypots fall to consistency checks,
+  not special-casing. Rules-compliant by construction: top-100, CPU-only,
+  ~39s/0.31GB (well under 5min/16GB), offline. Every rule was audit-driven and
+  base-rate-verified.

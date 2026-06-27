@@ -94,7 +94,7 @@ signals:
     dense_weight: 0.12
 
   - id: evaluation
-    label: "ranking-evaluation frameworks (NDCG/MRR/MAP, offline<->online, A/B)"
+    label: "ranking/relevance evaluation & experimentation (offline-online, A/B testing)"
     query: >-
       evaluation framework for ranking systems NDCG MRR MAP offline online A/B
       testing relevance metrics
