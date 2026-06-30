@@ -34,19 +34,30 @@ import pandas as pd
 
 from redrob_ranker import profile as rprofile
 from redrob_ranker import rules as rrules
+from redrob_ranker.gates import GATES
 
-BASE = os.environ.get("RANKER_ROOT") or os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+def _find_base():
+    """Resolve the artifacts root. RANKER_ROOT wins; else the dir holding this
+    script if artifacts_v7 sits beside it (the shipped flat repo); else three
+    levels up (the versions/<v>/ dev-tree layout)."""
+    env = os.environ.get("RANKER_ROOT")
+    if env:
+        return env
+    here = os.path.dirname(os.path.abspath(__file__))
+    if os.path.isdir(os.path.join(here, "artifacts_v7")):
+        return here
+    return os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+
+
+BASE = _find_base()
 ART = os.path.join(BASE, "artifacts_v7")
 HERE = os.path.dirname(os.path.abspath(__file__))
 JD_DEFAULT = os.path.join(HERE, "jd", "jd_profile.yaml")
 METHOD_DEFAULT = os.path.join(HERE, "jd", "method_config.yaml")
 SEP = "\x1f"
 
-# gate / output columns never fed to the student (mirror of rank.py GATES)
-GATES = {"availability_mult", "integrity", "notice_pen", "loc2_v4",
-         "fit_rules", "final_rules", "dormant", "low_rr", "anach",
-         "la_lt_signup", "concurrent_deg", "remote_pref", "no_reloc",
-         "city_ok", "notice_days"}
+# GATES (gate/output columns never fed to the student) is imported from
+# redrob_ranker.gates — the single source of truth shared with rank.py.
 
 INCUMBENT = dict(learning_rate=0.05, num_leaves=31, min_data_in_leaf=40,
                  feature_fraction=0.8, bagging_fraction=0.8,

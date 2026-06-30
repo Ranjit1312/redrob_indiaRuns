@@ -59,7 +59,10 @@ python rank.py --candidates ./candidates.jsonl --out ./submission.csv
 
 CPU-only, no network, no GPU. **It reads the _precomputed artifacts_** in
 `artifacts_v7/` and never imports torch (so a GPU is unreachable by
-construction). Validate the output shape:
+construction). `rank.py` locates `artifacts_v7/` beside itself automatically; if
+you relocate the artifacts, set `RANKER_ROOT` to the directory that contains
+`artifacts_v7/` (the Docker image pins `RANKER_ROOT=/app`). Validate the output
+shape:
 
 ```bash
 python validate_submission.py --submission ./submission.csv
@@ -130,9 +133,21 @@ to the serial build. `validate_submission.py` reports **PASS on all 11 checks**
 `train` 480 s (cross-encoder teacher 428 s + LightGBM student 50 s) ≈ **21 min**.
 
 **Model quality** — held-out split, student vs. cross-encoder teacher
-(`artifacts_v7/train_eval.json`): NDCG@10 **0.447**, NDCG@50 **0.703**, Spearman
-**0.740** (best iteration 16). These measure the student's fidelity to the
-teacher used for distillation, not the hidden ground truth.
+(`artifacts_v7/train_eval.json`). Two lenses on the same holdout, deliberately
+reported together because they look very different:
+
+- **Standard grouped NDCG@10 ≈ 0.98** — LightGBM's own per-group (groups of 500)
+  metric across the training run (the `curve_ndcg10` array in that file): the
+  student reproduces the teacher's per-group ordering almost exactly.
+- **Strict whole-list NDCG@10 = 0.447** (NDCG@50 0.703, Spearman 0.740) — our own
+  `ndcg_at()` ([train.py](train.py)) scoring the *entire* ~2,400-row holdout as a
+  single ranked list with continuous `2^(4·label)` gains: a deliberately harsh
+  "did we nail the exact top-10 out of 2,400?" test.
+
+Both measure **fidelity to the distillation teacher, not the hidden ground
+truth.** The low whole-list figure is the metric's strictness, not a weak model
+(4-fold CV **0.735**; converges by iteration 16). We quote the strict number as
+the conservative headline.
 
 ---
 
@@ -232,14 +247,23 @@ document → document).
    a "ranking" mention earns credit only with its surrounding ownership/scale context —
    defeating decontextualized keyword-stuffing.
 
-2. **Self-reported skills can't buy rank (anti-keyword-stuffer).** A candidate's
-   `skills` array — proficiency, `duration_months`, endorsements — **never adds
-   positive score on its own.** Claimed AI skills only count when **corroborated by the
-   career text** (gate (2): an uncorroborated stuffer is damped toward ×0.5, never
-   lifted above 1.0). The array's *internal impossibilities* (durations exceeding the
-   career, etc.) feed only the **soft** integrity ladder — in this synthetic pool those
-   values are pervasive noise, so we damp them (×0.85–0.97), we do not trust them as
-   ground truth or hard-gate on them.
+2. **Self-reported skills can only *cost* rank, never buy it (anti-keyword-stuffer).**
+   The `skills` array is read **asymmetrically**, and this is the precise meaning of
+   "we don't trust skill tags": it **never adds positive score**, `endorsements` is
+   dropped entirely ([intrinsic.py](redrob_ranker/intrinsic.py) — measured ~useless, see the
+   "tested and rejected" note below), and `proficiency`/`duration_months` are read
+   *only* to detect internal impossibility:
+   - a skill claimed for longer than the candidate's **entire career** → **soft** damp
+     ×0.85–0.97 (pervasive synthetic noise — **4.7%** of the pool, so damped not gated);
+   - an **"expert" tag with 0 months** (or ≥8 "expert" skills) → **hard** ×0.05
+     (honeypot-tier — the hard-gate union fires on just **0.085%** of the pool, ≈ the
+     ~80 planted honeypots; the spec's own example is *"expert proficiency, 0 years used"*).
+
+   Claimed AI skills can only ever *help* indirectly, and only when **corroborated by the
+   career text** (gate (2): an uncorroborated stuffer is damped toward ×0.5, never lifted
+   above 1.0). Using a field destructively (catch fraud) while refusing it constructively
+   (award points) is the whole point — skills are the documented attack surface, so they
+   gate **down**, never up.
 
 3. **`skill_assessment_scores` is the one trusted out-of-experience skill signal.** The
    platform's proctored assessments are the single skill channel a stuffer cannot fake,
@@ -395,6 +419,6 @@ ARCHITECTURE.md, DOCKER_RUNBOOK.md, jd/RETARGETING.md
 
 ## 13. AI tools
 
-Built with **Claude** (Claude Code) as a development assistant; all architecture,
+Built with **Claude** as a development assistant; all architecture,
 scoring design, and engineering decisions are the team's own. Declared in
 [`submission_metadata.yaml`](submission_metadata.yaml).

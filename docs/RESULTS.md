@@ -1,8 +1,11 @@
 # Version run results — telemetry & validation (2026-06-13, constant script names)
 
-Every version's rank entry is now `rank.py` in its own directory, run in its **own slim
-venv** (Python 3.12.10; numpy/pandas/pyarrow/orjson/psutil; +lightgbm v4/v5). Telemetry
-written per version (`telemetry.json` / `rank_telemetry.json`).
+Rows **v1–v5 are the iteration line** — the audit-and-refine archive, each `rank.py`
+in its own directory run in its **own slim venv** (Python 3.12.10;
+numpy/pandas/pyarrow/orjson/psutil; +lightgbm v4/v5), telemetry per version
+(`telemetry.json` / `rank_telemetry.json`). The **shipped submission is v7** (the
+JD-seam architecture documented in the root `README.md`); its row is added at the
+bottom and is the authoritative entry.
 
 | Version | Wall | Budget | Peak RAM | Validation |
 |---|---|---|---|---|
@@ -10,12 +13,20 @@ written per version (`telemetry.json` / `rank_telemetry.json`).
 | v2 evidence + integrity* | 112.2 s | 37.4% | ~1.6 GB | PASS |
 | v3 + assessments* | 114.5 s | 38.2% | ~1.6 GB | PASS |
 | v4 + CE-distilled blend | 2.3 s | 0.8% | 0.34 GB | PASS |
-| **v5-final (submission)** | **3.6 s** | **1.2%** | **0.34 GB** | **PASS** |
+| v5-final (iteration line) | 3.6 s | 1.2% | 0.34 GB | PASS |
+| **v7 (shipped submission)†** | **38.8 s** | **12.9%** | **0.31 GB** | **PASS (11/11)** |
 
 \* v2/v3 `rank.py` re-derive rule features by streaming the 465 MB JSONL each run (how
 iteration was done; embeddings always reused). v1/v4/v5 use the artifact-consuming pattern
-the gate grades. v5-final's `rank.py` is the Stage-3 command:
-`python rank.py --candidates ..\..\candidates.jsonl --out .\submission.csv`.
+the gate grades.
+
+† **Why v7 is slower than v5 at rank time and still the shipped version.** v4/v5 loaded a
+precomputed `features.parquet` (hence ~2–3.6 s). v7 trades that for the JD-seam
+architecture: `rank.py` **rebuilds the JD-dependent features live** from pooled,
+JD-independent artifacts (38.3 s of the 38.8 s, parallel across workers), so retargeting
+to a new JD is a config edit with no candidate re-embed. Still **12.9%** of the 5-minute
+budget. v7's Stage-3 command:
+`python rank.py --candidates ./candidates.jsonl --out ./submission.csv`.
 
 ## GPU/CPU split (v5-final)
 - **GPU only in precompute** (`precompute.py` orchestrator): bi-encoder embeddings +

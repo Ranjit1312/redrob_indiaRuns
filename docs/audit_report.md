@@ -135,6 +135,30 @@ path, 100/100 identical rows.
 
 ---
 
+## Integrity-ladder base rates — the skills / impossibility gates
+
+The skills-derived integrity gates predate the Round-4 table above (they were
+added in the v2 evidence layer), so their pool prevalence was not recorded here.
+Confirmed by a full 100,000-candidate scan of `candidates.jsonl` (thresholds from
+`jd/method_config.yaml`: `too_many_expert: 8`, `skill_dur: {ratio 1.25, slack 6mo,
+min_count 2}`, `integrity.hard: 0.05`):
+
+| Gate trigger | Pool count / rate | Severity | Why this severity |
+|---|---|---|---|
+| `n_expert_zero_dur > 0` — an "expert" skill with 0 months used | 21 (0.021%) | **hard ×0.05** | ultra-rare; the spec's literal honeypot example |
+| `n_expert >= 8` — eight or more "expert" skills | 64 (0.064%) | **hard ×0.05** | ultra-rare |
+| **hard-gate union** (either of the above) | **85 (0.085%)** | **hard ×0.05** | ≈ the ~80 planted honeypots — honeypot-tier |
+| `n_skill_dur_exceed >= 2` — ≥2 skills used longer than the whole career | 4,681 (**4.7%**) | **soft ×0.85–0.97** | pervasive synthetic noise → damped, not gated |
+
+Same philosophy as Round 4: the hard expert-with-0-months / ≥8-expert gate fires
+on **0.085%** of the pool — squarely honeypot-tier, so a ×0.05 collapse is
+justified rather than aggressive. The skill-duration overflow, at **4.7%** (the
+same figure the methodology note cites as "would have zeroed 4.7% of the pool"),
+is too common to be honeypots, so it is a soft multiplicative damp only — never a
+hard gate, and skill tags never *lift* a score in either case.
+
+---
+
 ## Methodology note
 
 - **Every audit claim was verified against pool base rates before being

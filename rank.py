@@ -49,19 +49,30 @@ from redrob_ranker import profile as rprofile
 from redrob_ranker import features as rfeatures
 from redrob_ranker import rules as rrules
 from redrob_ranker.rules import mm
+from redrob_ranker.gates import GATES
 
-BASE = os.environ.get("RANKER_ROOT") or os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+def _find_base():
+    """Resolve the artifacts root. RANKER_ROOT wins; else the dir holding this
+    script if artifacts_v7 sits beside it (the shipped flat repo); else three
+    levels up (the versions/<v>/ dev-tree layout)."""
+    env = os.environ.get("RANKER_ROOT")
+    if env:
+        return env
+    here = os.path.dirname(os.path.abspath(__file__))
+    if os.path.isdir(os.path.join(here, "artifacts_v7")):
+        return here
+    return os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+
+
+BASE = _find_base()
 OUT = os.path.dirname(os.path.abspath(__file__))
 ART = os.path.join(BASE, "artifacts_v7")
 HERE = OUT
 JD_DEFAULT = os.path.join(HERE, "jd", "jd_profile.yaml")
 METHOD_DEFAULT = os.path.join(HERE, "jd", "method_config.yaml")
 
-# columns that are gates / outputs, never LGBM features (mirror of train.py)
-GATES = {"availability_mult", "integrity", "notice_pen", "loc2_v4",
-         "fit_rules", "final_rules", "dormant", "low_rr", "anach",
-         "la_lt_signup", "concurrent_deg", "remote_pref", "no_reloc",
-         "city_ok", "notice_days"}
+# GATES (the gate/output columns never fed to the student) is the single
+# source of truth in redrob_ranker.gates, imported above and shared with train.py.
 
 # ---------------------------------------------------------------------------
 # telemetry (same snap/T pattern as v5/v6 rank.py)
@@ -153,6 +164,10 @@ def main():
     import lightgbm as lgb
     booster = lgb.Booster(model_file=os.path.join(ART, "model.txt"))
     feat_cols = json.load(open(os.path.join(ART, "feature_cols.json")))
+    # invariant: no gate/output column may leak into the student matrix (else the
+    # student could learn a gate and "gates apply outside the blend" would break).
+    leaked = set(feat_cols) & GATES
+    assert not leaked, f"gate column(s) leaked into student features: {sorted(leaked)}"
     lgbm_score = booster.predict(df[feat_cols].astype("float32").values)
     alpha = method.alpha
     blend = alpha * mm(lgbm_score) + (1 - alpha) * mm(fit)

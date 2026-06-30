@@ -32,7 +32,20 @@ import pandas as pd
 from redrob_ranker import profile as rprofile
 from redrob_ranker.intrinsic import extract_intrinsic
 
-BASE = os.environ.get("RANKER_ROOT") or os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+def _find_base():
+    """Resolve the artifacts root. RANKER_ROOT wins; else the dir holding this
+    script if artifacts_v7 sits beside it (the shipped flat repo); else three
+    levels up (the versions/<v>/ dev-tree layout)."""
+    env = os.environ.get("RANKER_ROOT")
+    if env:
+        return env
+    here = os.path.dirname(os.path.abspath(__file__))
+    if os.path.isdir(os.path.join(here, "artifacts_v7")):
+        return here
+    return os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+
+
+BASE = _find_base()
 ART = os.path.join(BASE, "artifacts_v7")
 HERE = os.path.dirname(os.path.abspath(__file__))
 METHOD_DEFAULT = os.path.join(HERE, "jd", "method_config.yaml")
